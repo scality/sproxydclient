@@ -16,6 +16,10 @@
     "email": "michael.zapata@scality.com",
     "url": "http://www.scality.com/"
   },
+  "dependencies": {
+    "async": "^1.5.0",
+    "node-uks": "scality/node-uks"
+  },
   "devDependencies": {
     "mocha": "^2.3.4"
   },
