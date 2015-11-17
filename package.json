@@ -1,0 +1,27 @@
+{
+  "name": "sproxyd",
+  "version": "0.0.1",
+  "description": "sproxyd client",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha tests/unit"
+  },
+  "repository": "scality/sproxyd",
+  "keywords": [
+    "sproxyd",
+    "ring"
+  ],
+  "author": {
+    "name": "Michael Zapata",
+    "email": "michael.zapata@scality.com",
+    "url": "http://www.scality.com/"
+  },
+  "devDependencies": {
+    "mocha": "^2.3.4"
+  },
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/scality/sproxyd/issues"
+  },
+  "homepage": "https://github.com/scality/sproxyd#readme"
+}
