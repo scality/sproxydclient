@@ -1,0 +1,12 @@
+machine:
+  pre:
+    - sudo sed -i 's/\.s3\.amazonaws\.com//ig' /etc/apt/sources.list /etc/apt/sources.list.d/*
+    - sudo sed -i 's/us-east-1/us-west-1/g' /etc/apt/sources.list /etc/apt/sources.list.d/*
+    - sudo rm /etc/apt/sources.list.d/circle.list  /etc/apt/sources.list.d/cassandra.list /etc/apt/sources.list.d/google.list
+    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+    - sudo apt-get update
+    - sudo apt-get install gcc-4.9 g++-4.9
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 20
+    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 20
+  node:
+    version: 4.1
