@@ -17,7 +17,7 @@ describe('Requesting Sproxyd', function tests() {
         done();
     });
 
-    it('should put some data via sproxyd', done => {
+    it('should put some data via sproxyd', function putTest(done) {
         // The put operation has sometimes a lot of latency
         this.timeout(0);
         let client = new Sproxy();
