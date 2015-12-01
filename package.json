@@ -1,5 +1,5 @@
 {
-  "name": "sproxyd",
+  "name": "sproxydclient",
   "version": "0.0.1",
   "description": "sproxyd client",
   "main": "index.js",
