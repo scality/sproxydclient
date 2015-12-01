@@ -2,23 +2,22 @@
 
 const assert = require('assert');
 const Sproxy = require('../../index');
+const opts = require('../../config.json');
 
 let savedKeys;
 
 describe('Requesting Sproxyd', function tests() {
     it('should initialize a new sproxyd client', (done) => {
         const client = new Sproxy({
-            hostname: '127.0.0.1'
+            bootstrap: [ '127.0.0.1:8000' ]
         });
-        assert.deepStrictEqual(client.opts.hostname, '127.0.0.1');
-        assert.deepStrictEqual(client.opts.port, 81);
-        assert.deepStrictEqual(client.opts.path, '/proxy/arc/');
+        assert.deepStrictEqual(client.bootstrap[0][0], '127.0.0.1');
+        assert.deepStrictEqual(client.bootstrap[0][1], '8000');
+        assert.deepStrictEqual(client.path, '/proxy/arc/');
         done();
     });
 
     it('should put some data via sproxyd', function putTest(done) {
-        // The put operation has sometimes a lot of latency
-        this.timeout(0);
         const client = new Sproxy();
         client.put(new Buffer('test'), (err, keys) => {
             savedKeys = keys;
