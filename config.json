@@ -1,0 +1,9 @@
+{
+  "bootstrap": [
+    "connectora.ringr2.devsca.com:81",
+    "connectorb.ringr2.devsca.com:81",
+    "connectorc.ringr2.devsca.com:81",
+    "connectord.ringr2.devsca.com:81"
+  ],
+  "path": "/proxy/arc/"
+}
