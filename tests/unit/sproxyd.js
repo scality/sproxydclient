@@ -24,7 +24,7 @@ describe('Requesting Sproxyd', function tests() {
 
     it('should put some data via sproxyd', (done) => {
         const client = new Sproxy();
-        client.put(new Buffer('test'), (err, keys) => {
+        client.put(upload, (err, keys) => {
             savedKeys = keys;
             done(err);
         });
@@ -34,7 +34,7 @@ describe('Requesting Sproxyd', function tests() {
         const client = new Sproxy();
         client.get(savedKeys, (err, data) => {
             if (err) { return done(err); }
-            assert.deepStrictEqual(data, [ new Buffer('test'), ]);
+            assert.deepStrictEqual(data, [ upload, ]);
             done();
         });
     });
