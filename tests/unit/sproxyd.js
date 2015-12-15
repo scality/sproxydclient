@@ -1,7 +1,9 @@
 'use strict';
 
 const assert = require('assert');
+const async = require('async');
 const crypto = require('crypto');
+
 const Sproxy = require('../../index');
 const opts = require('../../config.json');
 
@@ -78,5 +80,17 @@ describe('Requesting Sproxyd', function tests() {
     it('should delete some data via sproxyd', done => {
         const client = new Sproxy();
         client.delete(savedKeys, done);
+    });
+
+    it('should fail getting any non existing data', done => {
+        const client = new Sproxy();
+        async.each(savedKeys, (key, next) => {
+            client.get([ key ], (err) => {
+                const error = new Error(404);
+                error.isExpected = true;
+                assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
+                next();
+            });
+        }, done);
     });
 });
