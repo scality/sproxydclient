@@ -47,7 +47,9 @@ describe('Requesting Sproxyd', function tests() {
     it('should fail getting non existing data', done => {
         const client = new Sproxy();
         client.get(savedKeys, (err) => {
-            assert.deepStrictEqual(err, new Error(404), 'Doesn\'t fail');
+            const error = new Error(404);
+            error.isExpected = true;
+            assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
             done();
         });
     });
