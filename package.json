@@ -17,7 +17,9 @@
     "url": "http://www.scality.com/"
   },
   "dependencies": {
-    "async": "^1.5.0"
+    "async": "^1.5.0",
+    "bunyan-logstash": "^0.3.4",
+    "werelogs": "scality/werelogs"
   },
   "devDependencies": {
     "mocha": "^2.3.4"

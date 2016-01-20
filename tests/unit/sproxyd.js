@@ -13,6 +13,7 @@ const chunkSize = new Sproxy().chunkSize;
 const namespace = 'default';
 const owner = 'glados';
 const parameters = { bucketName, namespace, owner };
+const reqUid = 'REQ1';
 let upload = crypto.randomBytes(4);
 let client;
 let savedKeys;
@@ -68,14 +69,14 @@ describe('Requesting Sproxyd', function tests() {
     });
 
     it('should put some data via sproxyd', done => {
-        client.put(upload, parameters, (err, keys) => {
+        client.put(upload, parameters, reqUid, (err, keys) => {
             savedKeys = keys;
             done(err);
         });
     });
 
     it('should get some data via sproxyd', done => {
-        client.get(savedKeys, (err, data) => {
+        client.get(savedKeys, reqUid, (err, data) => {
             if (err) { return done(err); }
             assert.deepStrictEqual(data, [ upload, ]);
             done();
@@ -83,11 +84,11 @@ describe('Requesting Sproxyd', function tests() {
     });
 
     it('should delete some data via sproxyd', done => {
-        client.delete(savedKeys, done);
+        client.delete(savedKeys, reqUid, done);
     });
 
     it('should fail getting non existing data', done => {
-        client.get(savedKeys, (err) => {
+        client.get(savedKeys, reqUid, (err) => {
             const error = new Error(404);
             error.isExpected = true;
             assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
@@ -97,14 +98,14 @@ describe('Requesting Sproxyd', function tests() {
 
     it('should put some chunks of data via sproxyd', (done) => {
         upload = crypto.randomBytes(3 * chunkSize);
-        client.put(upload, parameters, (err, keys) => {
+        client.put(upload, parameters, reqUid, (err, keys) => {
             savedKeys = keys;
             done(err);
         });
     });
 
     it('should get some data via sproxyd', done => {
-        client.get(savedKeys, (err, data) => {
+        client.get(savedKeys, reqUid, (err, data) => {
             if (err) { return done(err); }
             data.forEach(chunk => assert.strictEqual(chunk.length, chunkSize));
             assert.strictEqual(data.length, 3);
@@ -115,12 +116,12 @@ describe('Requesting Sproxyd', function tests() {
     });
 
     it('should delete some data via sproxyd', done => {
-        client.delete(savedKeys, done);
+        client.delete(savedKeys, reqUid, done);
     });
 
     it('should fail getting any non existing data', done => {
         async.each(savedKeys, (key, next) => {
-            client.get([ key ], (err) => {
+            client.get([ key ], reqUid, (err) => {
                 const error = new Error(404);
                 error.isExpected = true;
                 assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
