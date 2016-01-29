@@ -3,6 +3,7 @@
 const assert = require('assert');
 const crypto = require('crypto');
 const http = require('http');
+const stream = require('stream');
 
 const async = require('async');
 
@@ -18,7 +19,6 @@ let upload = crypto.randomBytes(4);
 let client;
 let savedKeys;
 let server;
-
 
 function makeResponse(res, code, message, data) {
     res.statusCode = code;
@@ -69,7 +69,10 @@ describe('Requesting Sproxyd', function tests() {
     });
 
     it('should put some data via sproxyd', done => {
-        client.put(upload, parameters, reqUid, (err, keys) => {
+        const upStream = new stream.Readable;
+        upStream.push(upload);
+        upStream.push(null);
+        client.put(upStream, parameters, reqUid, (err, keys) => {
             savedKeys = keys;
             done(err);
         });
@@ -96,9 +99,12 @@ describe('Requesting Sproxyd', function tests() {
         });
     });
 
-    it('should put some chunks of data via sproxyd', (done) => {
+    it('should put some chunks of data via sproxyd', done => {
         upload = crypto.randomBytes(3 * chunkSize);
-        client.put(upload, parameters, reqUid, (err, keys) => {
+        const upStream = new stream.Readable;
+        upStream.push(upload);
+        upStream.push(null);
+        client.put(upStream, parameters, reqUid, (err, keys) => {
             savedKeys = keys;
             done(err);
         });
@@ -107,8 +113,6 @@ describe('Requesting Sproxyd', function tests() {
     it('should get some data via sproxyd', done => {
         client.get(savedKeys, reqUid, (err, data) => {
             if (err) { return done(err); }
-            data.forEach(chunk => assert.strictEqual(chunk.length, chunkSize));
-            assert.strictEqual(data.length, 3);
             const tmp = Buffer.concat(data);
             assert.deepStrictEqual(upload, tmp);
             done();
