@@ -109,39 +109,4 @@ describe('Requesting Sproxyd', function tests() {
             done();
         });
     });
-
-    it('should put some chunks of data via sproxyd', done => {
-        upload = crypto.randomBytes(3 * chunkSize);
-        const upStream = new stream.Readable;
-        upStream.push(upload);
-        upStream.push(null);
-        client.put(upStream, parameters, reqUid, (err, keys) => {
-            savedKeys = keys;
-            done(err);
-        });
-    });
-
-    it('should get some data via sproxyd', done => {
-        client.get(savedKeys, reqUid, (err, data) => {
-            if (err) { return done(err); }
-            const tmp = Buffer.concat(data);
-            assert.deepStrictEqual(upload, tmp);
-            done();
-        });
-    });
-
-    it('should delete some data via sproxyd', done => {
-        client.delete(savedKeys, reqUid, done);
-    });
-
-    it('should fail getting any non existing data', done => {
-        async.each(savedKeys, (key, next) => {
-            client.get([ key ], reqUid, (err) => {
-                const error = new Error(404);
-                error.isExpected = true;
-                assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
-                next();
-            });
-        }, done);
-    });
 });
