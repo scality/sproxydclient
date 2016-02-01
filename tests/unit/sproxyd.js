@@ -5,17 +5,15 @@ const crypto = require('crypto');
 const http = require('http');
 const stream = require('stream');
 
-const async = require('async');
-
 const Sproxy = require('../../index');
 
 const bucketName = 'aperture';
-const chunkSize = new Sproxy().chunkSize;
 const namespace = 'default';
 const owner = 'glados';
 const parameters = { bucketName, namespace, owner };
 const reqUid = 'REQ1';
-let upload = crypto.randomBytes(4);
+const upload = crypto.randomBytes(9000);
+const uploadMD5 = crypto.createHash('md5').update(upload).digest('hex');
 let client;
 let savedKeys;
 let server;
@@ -68,12 +66,25 @@ describe('Requesting Sproxyd', function tests() {
         done();
     });
 
+    it('should fail to put some data with wrong md5 via sproxyd', done => {
+        const upStream = new stream.Readable;
+        upStream.push(upload);
+        upStream.push(null);
+        upStream.contentMD5 = 'invaliddigest';
+        client.put(upStream, parameters, reqUid, err => {
+            if (err === 'InvalidDigest') { return done(); }
+            done(new Error('did not raise an error'));
+        });
+    });
+
     it('should put some data via sproxyd', done => {
         const upStream = new stream.Readable;
         upStream.push(upload);
         upStream.push(null);
+        upStream.contentMD5 = uploadMD5;
         client.put(upStream, parameters, reqUid, (err, keys) => {
             savedKeys = keys;
+            assert.strictEqual(upStream.calculatedMD5, uploadMD5);
             done(err);
         });
     });
