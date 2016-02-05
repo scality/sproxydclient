@@ -3,22 +3,20 @@
 const assert = require('assert');
 const crypto = require('crypto');
 const http = require('http');
-
-const async = require('async');
+const stream = require('stream');
 
 const Sproxy = require('../../index');
 
 const bucketName = 'aperture';
-const chunkSize = new Sproxy().chunkSize;
 const namespace = 'default';
 const owner = 'glados';
 const parameters = { bucketName, namespace, owner };
 const reqUid = 'REQ1';
-let upload = crypto.randomBytes(4);
+const upload = crypto.randomBytes(9000);
+const uploadMD5 = crypto.createHash('md5').update(upload).digest('hex');
 let client;
 let savedKeys;
 let server;
-
 
 function makeResponse(res, code, message, data) {
     res.statusCode = code;
@@ -68,9 +66,25 @@ describe('Requesting Sproxyd', function tests() {
         done();
     });
 
+    it('should fail to put some data with wrong md5 via sproxyd', done => {
+        const upStream = new stream.Readable;
+        upStream.push(upload);
+        upStream.push(null);
+        upStream.contentMD5 = 'invaliddigest';
+        client.put(upStream, parameters, reqUid, err => {
+            if (err === 'InvalidDigest') { return done(); }
+            done(new Error('did not raise an error'));
+        });
+    });
+
     it('should put some data via sproxyd', done => {
-        client.put(upload, parameters, reqUid, (err, keys) => {
+        const upStream = new stream.Readable;
+        upStream.push(upload);
+        upStream.push(null);
+        upStream.contentMD5 = uploadMD5;
+        client.put(upStream, parameters, reqUid, (err, keys) => {
             savedKeys = keys;
+            assert.strictEqual(upStream.calculatedMD5, uploadMD5);
             done(err);
         });
     });
@@ -94,39 +108,5 @@ describe('Requesting Sproxyd', function tests() {
             assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
             done();
         });
-    });
-
-    it('should put some chunks of data via sproxyd', (done) => {
-        upload = crypto.randomBytes(3 * chunkSize);
-        client.put(upload, parameters, reqUid, (err, keys) => {
-            savedKeys = keys;
-            done(err);
-        });
-    });
-
-    it('should get some data via sproxyd', done => {
-        client.get(savedKeys, reqUid, (err, data) => {
-            if (err) { return done(err); }
-            data.forEach(chunk => assert.strictEqual(chunk.length, chunkSize));
-            assert.strictEqual(data.length, 3);
-            const tmp = Buffer.concat(data);
-            assert.deepStrictEqual(upload, tmp);
-            done();
-        });
-    });
-
-    it('should delete some data via sproxyd', done => {
-        client.delete(savedKeys, reqUid, done);
-    });
-
-    it('should fail getting any non existing data', done => {
-        async.each(savedKeys, (key, next) => {
-            client.get([ key ], reqUid, (err) => {
-                const error = new Error(404);
-                error.isExpected = true;
-                assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
-                next();
-            });
-        }, done);
     });
 });

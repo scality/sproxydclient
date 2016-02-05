@@ -34,7 +34,8 @@ var client = new SproxydClient(opts);
 ##### PUT
 
 ```es6
-Client.put(new Buffer('example'), (err: Error, keysArray: string[]) => {});
+assert(stream instanceof stream.Readable);
+Client.put(stream, (err: Error, keysArray: string[]) => {});
 ```
 
 ##### GET
@@ -52,8 +53,6 @@ Client.delete(keys: string[], (err: Error) => {});
 ### TODO
 
 The API is still in its infancy stages. We need to:
-- Handle more than one connector at a time in case of failures
 - Detect said failures before sending our requests (Phi accrual detector)
-- Improve performance by using streams
 
 [ci-badge]: http://ci.ironmann.io/gh/scality/sproxydclient.svg?style=shield&circle-token=06bf5c091353d80a1296682f78ea08aeb986ce83
