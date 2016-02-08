@@ -109,4 +109,16 @@ describe('Requesting Sproxyd', function tests() {
             done();
         });
     });
+
+    it('should put some data via sproxyd without md5', done => {
+        const upStream = new stream.Readable;
+        upStream.push(upload);
+        upStream.push(null);
+        client.put(upStream, parameters, reqUid, (err, keys) => {
+            savedKeys = keys;
+            assert.strictEqual(upStream.calculatedMD5, uploadMD5);
+            done(err);
+        });
+    });
+
 });
