@@ -15,7 +15,7 @@ const reqUid = 'REQ1';
 const upload = crypto.randomBytes(9000);
 const uploadMD5 = crypto.createHash('md5').update(upload).digest('hex');
 let client;
-let savedKeys;
+let savedKey;
 let server;
 
 function makeResponse(res, code, message, data) {
@@ -82,27 +82,31 @@ describe('Requesting Sproxyd', function tests() {
         upStream.push(upload);
         upStream.push(null);
         upStream.contentMD5 = uploadMD5;
-        client.put(upStream, parameters, reqUid, (err, keys) => {
-            savedKeys = keys;
+        client.put(upStream, parameters, reqUid, (err, key) => {
+            savedKey = key;
             assert.strictEqual(upStream.calculatedMD5, uploadMD5);
             done(err);
         });
     });
 
     it('should get some data via sproxyd', done => {
-        client.get(savedKeys, reqUid, (err, data) => {
+        client.get(savedKey, reqUid, (err, stream) => {
+            let ret = new Buffer(0);
             if (err) { return done(err); }
-            assert.deepStrictEqual(data, [ upload, ]);
-            done();
+            stream.on('data', val => ret = Buffer.concat([ret, val]));
+            stream.on('end', () => {
+                assert.deepStrictEqual(ret, upload);
+                done();
+            });
         });
     });
 
     it('should delete some data via sproxyd', done => {
-        client.delete(savedKeys, reqUid, done);
+        client.delete(savedKey, reqUid, done);
     });
 
     it('should fail getting non existing data', done => {
-        client.get(savedKeys, reqUid, (err) => {
+        client.get(savedKey, reqUid, err => {
             const error = new Error(404);
             error.isExpected = true;
             assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
@@ -114,8 +118,8 @@ describe('Requesting Sproxyd', function tests() {
         const upStream = new stream.Readable;
         upStream.push(upload);
         upStream.push(null);
-        client.put(upStream, parameters, reqUid, (err, keys) => {
-            savedKeys = keys;
+        client.put(upStream, parameters, reqUid, (err, key) => {
+            savedKey = key;
             assert.strictEqual(upStream.calculatedMD5, uploadMD5);
             done(err);
         });

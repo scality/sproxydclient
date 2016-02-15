@@ -35,19 +35,19 @@ var client = new SproxydClient(opts);
 
 ```es6
 assert(stream instanceof stream.Readable);
-Client.put(stream, (err: Error, keysArray: string[]) => {});
+Client.put(stream: http.IncomingMessage, (err: Error, key: string) => {});
 ```
 
 ##### GET
 
 ```es6
-Client.get(keys: string[], (err: Error, valuesArray: Buffer[]) => {});
+Client.get(key: string, (err: Error, stream: http.IncomingMessage) => {});
 ```
 
 ##### DELETE
 
 ```es6
-Client.delete(keys: string[], (err: Error) => {});
+Client.delete(key: string, (err: Error) => {});
 ```
 
 ### TODO
