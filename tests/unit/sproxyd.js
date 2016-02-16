@@ -13,7 +13,7 @@ const owner = 'glados';
 const parameters = { bucketName, namespace, owner };
 const reqUid = 'REQ1';
 const upload = crypto.randomBytes(9000);
-const uploadMD5 = crypto.createHash('md5').update(upload).digest('hex');
+let uploadHash;
 let client;
 let savedKey;
 let server;
@@ -56,73 +56,79 @@ function handler(req, res) {
     }
 }
 
-describe('Requesting Sproxyd', function tests() {
-    before('initialize a new sproxyd client and fake server', done => {
-        client = new Sproxy({ bootstrap: [ '127.0.0.1:9000' ] });
-        assert.deepStrictEqual(client.bootstrap[0][0], '127.0.0.1');
-        assert.deepStrictEqual(client.bootstrap[0][1], '9000');
-        assert.deepStrictEqual(client.path, '/proxy/arc/');
-        server = http.createServer(handler).listen(9000);
-        done();
-    });
+client = new Sproxy({ bootstrap: [ '127.0.0.1:9000' ] });
+assert.deepStrictEqual(client.bootstrap[0][0], '127.0.0.1');
+assert.deepStrictEqual(client.bootstrap[0][1], '9000');
+assert.deepStrictEqual(client.path, '/proxy/arc/');
+server = http.createServer(handler).listen(9000);
 
-    it('should fail to put some data with wrong md5 via sproxyd', done => {
-        const upStream = new stream.Readable;
-        upStream.push(upload);
-        upStream.push(null);
-        upStream.contentMD5 = 'invaliddigest';
-        client.put(upStream, parameters, reqUid, err => {
-            if (err === 'InvalidDigest') { return done(); }
-            done(new Error('did not raise an error'));
+crypto.getHashes().forEach(algo => {
+    describe(`Requesting Sproxyd ${algo}`, function tests() {
+        before('initialize a new sproxyd client and fake server', done => {
+            uploadHash = crypto.createHash(algo).update(upload).digest('hex');
+            parameters.algo = algo;
+            done();
         });
-    });
 
-    it('should put some data via sproxyd', done => {
-        const upStream = new stream.Readable;
-        upStream.push(upload);
-        upStream.push(null);
-        upStream.contentMD5 = uploadMD5;
-        client.put(upStream, parameters, reqUid, (err, key) => {
-            savedKey = key;
-            assert.strictEqual(upStream.calculatedMD5, uploadMD5);
-            done(err);
+        it(`should fail to put some data with wrong ${algo} via sproxyd`, done => {
+            const upStream = new stream.Readable;
+            upStream.push(upload);
+            upStream.push(null);
+            upStream.contentHash = 'invaliddigest';
+            client.put(upStream, parameters, reqUid, err => {
+                if (err === 'InvalidDigest') { return done(); }
+                done(new Error('did not raise an error'));
+            });
         });
-    });
 
-    it('should get some data via sproxyd', done => {
-        client.get(savedKey, reqUid, (err, stream) => {
-            let ret = new Buffer(0);
-            if (err) { return done(err); }
-            stream.on('data', val => ret = Buffer.concat([ret, val]));
-            stream.on('end', () => {
-                assert.deepStrictEqual(ret, upload);
+        it('should put some data via sproxyd', done => {
+            const upStream = new stream.Readable;
+            upStream.push(upload);
+            upStream.push(null);
+            upStream.contentHash = uploadHash;
+            client.put(upStream, parameters, reqUid, (err, key) => {
+                savedKey = key;
+                assert.strictEqual(upStream.calculatedHash, uploadHash);
+                done(err);
+            });
+        })
+;
+        it('should get some data via sproxyd', done => {
+            client.get(savedKey, reqUid, (err, stream) => {
+                let ret = new Buffer(0);
+                if (err) { return done(err); }
+                stream.on('data', val => ret = Buffer.concat([ret, val]));
+                stream.on('end', () => {
+                    assert.deepStrictEqual(ret, upload);
+                    done();
+                });
+            });
+        });
+
+        it('should delete some data via sproxyd', done => {
+            client.delete(savedKey, reqUid, done);
+        });
+
+        it('should fail getting non existing data', done => {
+            client.get(savedKey, reqUid, err => {
+                const error = new Error(404);
+                error.isExpected = true;
+                assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
                 done();
             });
         });
-    });
 
-    it('should delete some data via sproxyd', done => {
-        client.delete(savedKey, reqUid, done);
-    });
-
-    it('should fail getting non existing data', done => {
-        client.get(savedKey, reqUid, err => {
-            const error = new Error(404);
-            error.isExpected = true;
-            assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
-            done();
+        it(`should put some data via sproxyd without ${algo}`, done => {
+            const upStream = new stream.Readable;
+            upStream.push(upload);
+            upStream.push(null);
+            client.put(upStream, parameters, reqUid, (err, key) => {
+                savedKey = key;
+                assert.strictEqual(upStream.calculatedHash, uploadHash);
+                done(err);
+            });
         });
-    });
 
-    it('should put some data via sproxyd without md5', done => {
-        const upStream = new stream.Readable;
-        upStream.push(upload);
-        upStream.push(null);
-        client.put(upStream, parameters, reqUid, (err, key) => {
-            savedKey = key;
-            assert.strictEqual(upStream.calculatedMD5, uploadMD5);
-            done(err);
-        });
     });
-
 });
+
