@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "bunyan-logstash": "^0.3.4",
-    "werelogs": "scality/werelogs"
+    "werelogs": "scality/werelogs#rel/1.0"
   },
   "devDependencies": {
     "mocha": "^2.3.4"
