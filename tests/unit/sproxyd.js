@@ -1,4 +1,4 @@
-'use strict';
+'use strict'; // eslint-disable-line
 
 const assert = require('assert');
 const crypto = require('crypto');
@@ -13,14 +13,13 @@ const owner = 'glados';
 const parameters = { bucketName, namespace, owner };
 const reqUid = 'REQ1';
 const upload = crypto.randomBytes(9000);
+
 let uploadHash;
-let client;
 let savedKey;
 let server;
 
 function makeResponse(res, code, message, data) {
-    res.statusCode = code;
-    res.statusMessage = message;
+    res.writeHead(code, message);
     if (data) {
         res.write(data);
     }
@@ -36,9 +35,9 @@ function handler(req, res) {
             makeResponse(res, 404, 'AlreadyExists');
         } else {
             server[key] = new Buffer(0);
-            req.on('data', data => server[key] = Buffer
-                   .concat([ server[key], data ]))
-            .on('end', () => makeResponse(res, 200, 'OK'));
+            req.on('data', data => {
+                server[key] = Buffer.concat([server[key], data]);
+            }).on('end', () => makeResponse(res, 200, 'OK'));
         }
     } else if (req.method === 'GET') {
         if (!server[key]) {
@@ -55,31 +54,32 @@ function handler(req, res) {
         }
     }
 }
+server = http.createServer(handler).listen(9000);
 
-client = new Sproxy({ bootstrap: [ '127.0.0.1:9000' ] });
+const client = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
 assert.deepStrictEqual(client.bootstrap[0][0], '127.0.0.1');
 assert.deepStrictEqual(client.bootstrap[0][1], '9000');
 assert.deepStrictEqual(client.path, '/proxy/arc/');
-server = http.createServer(handler).listen(9000);
 
 crypto.getHashes().forEach(algo => {
-    describe(`Requesting Sproxyd ${algo}`, function tests() {
+    describe(`Requesting Sproxyd ${algo}`, () => {
         before('initialize a new sproxyd client and fake server', done => {
             uploadHash = crypto.createHash(algo).update(upload).digest('hex');
             parameters.algo = algo;
             done();
         });
 
-        it(`should fail to put some data with wrong ${algo} via sproxyd`, done => {
-            const upStream = new stream.Readable;
-            upStream.push(upload);
-            upStream.push(null);
-            upStream.contentHash = 'invaliddigest';
-            client.put(upStream, parameters, reqUid, err => {
-                if (err === 'InvalidDigest') { return done(); }
-                done(new Error('did not raise an error'));
+        it(`should fail to put some data with wrong ${algo} via sproxyd`,
+            done => {
+                const upStream = new stream.Readable;
+                upStream.push(upload);
+                upStream.push(null);
+                upStream.contentHash = 'invaliddigest';
+                client.put(upStream, parameters, reqUid, err => {
+                    if (err === 'InvalidDigest') { return done(); }
+                    return done(new Error('did not raise an error'));
+                });
             });
-        });
 
         it('should put some data via sproxyd', done => {
             const upStream = new stream.Readable;
@@ -97,10 +97,12 @@ crypto.getHashes().forEach(algo => {
             client.get(savedKey, reqUid, (err, stream) => {
                 let ret = new Buffer(0);
                 if (err) { return done(err); }
-                stream.on('data', val => ret = Buffer.concat([ret, val]));
+                stream.on('data', val => {
+                    ret = Buffer.concat([ret, val]);
+                });
                 stream.on('end', () => {
                     assert.deepStrictEqual(ret, upload);
-                    done();
+                    return done();
                 });
             });
         });
@@ -128,7 +130,5 @@ crypto.getHashes().forEach(algo => {
                 done(err);
             });
         });
-
     });
 });
-
