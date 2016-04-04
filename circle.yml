@@ -9,5 +9,5 @@ machine:
 
 test:
   override:
+    - npm run --silent lint
     - npm test
-              

@@ -4,6 +4,7 @@
   "description": "sproxyd client",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint $(git ls-files '*.js')",
     "test": "mocha tests/unit"
   },
   "repository": "scality/sproxyd",
@@ -18,6 +19,9 @@
   },
   "dependencies": {
     "bunyan-logstash": "^0.3.4",
+    "eslint": "^2.4.0",
+    "eslint-config-airbnb": "^6.0.0",
+    "eslint-config-ironman": "scality/IronMan-Guidelines#rel/1.0",
     "werelogs": "scality/werelogs#rel/1.0"
   },
   "devDependencies": {
