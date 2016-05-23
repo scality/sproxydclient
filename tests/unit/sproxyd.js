@@ -119,6 +119,7 @@ crypto.getHashes().forEach(algo => {
             client.get(savedKey, undefined, reqUid, err => {
                 const error = new Error(404);
                 error.isExpected = true;
+                error.code = 404;
                 assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
                 done();
             });
