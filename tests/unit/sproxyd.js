@@ -17,6 +17,12 @@ let uploadHash;
 let client;
 let savedKey;
 let server;
+let mdHex = new Buffer('some useless data').toString('hex');
+
+function generateKey() {
+    return crypto.createHash('md5').update(crypto.randomBytes(1024).toString())
+                .digest().slice(0, 20).toString('hex').toUpperCase();
+}
 
 function makeResponse(res, code, message, data) {
     res.statusCode = code;
@@ -91,8 +97,8 @@ crypto.getHashes().forEach(algo => {
                 assert.strictEqual(upStream.calculatedHash, uploadHash);
                 done(err);
             });
-        })
-;
+        });
+
         it('should get some data via sproxyd', done => {
             client.get(savedKey, undefined, reqUid, (err, stream) => {
                 let ret = new Buffer(0);
@@ -129,6 +135,11 @@ crypto.getHashes().forEach(algo => {
             });
         });
 
+        it('should put an empty object via sproxyd', done => {
+            client.putEmptyObject(generateKey(), mdHex, reqUid, (err, key) => {
+                done(err);
+            });
+        });
     });
 });
 
