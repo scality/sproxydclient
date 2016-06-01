@@ -94,7 +94,7 @@ crypto.getHashes().forEach(algo => {
         })
 ;
         it('should get some data via sproxyd', done => {
-            client.get(savedKey, reqUid, (err, stream) => {
+            client.get(savedKey, undefined, reqUid, (err, stream) => {
                 let ret = new Buffer(0);
                 if (err) { return done(err); }
                 stream.on('data', val => ret = Buffer.concat([ret, val]));
@@ -110,7 +110,7 @@ crypto.getHashes().forEach(algo => {
         });
 
         it('should fail getting non existing data', done => {
-            client.get(savedKey, reqUid, err => {
+            client.get(savedKey, undefined, reqUid, err => {
                 const error = new Error(404);
                 error.isExpected = true;
                 assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
