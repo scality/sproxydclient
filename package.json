@@ -17,7 +17,7 @@
     "url": "http://www.scality.com/"
   },
   "dependencies": {
-    "werelogs": "scality/werelogs#rel/1.0"
+    "werelogs": "scality/werelogs#dev/FT/safeJSONStringify"
   },
   "devDependencies": {
     "mocha": "^2.3.4"
