@@ -92,6 +92,19 @@ assert.deepStrictEqual(client.path, '/proxy/arc/');
 
 describe('Create the server', () => {
 
+    it('Listen', done => {
+        server = http.createServer(handler).listen(9000);
+        server.on('listening', () => {
+            done();
+        });
+        server.on('error', err => {
+            process.stdout.write(`${err.stack}\n`);
+            process.exit(1);
+        });
+    });
+});
+
+crypto.getHashes().forEach(algo => {
     describe(`Requesting Sproxyd ${algo}`, function tests() {
         before('initialize a new sproxyd client and fake server', done => {
             uploadHash = crypto.createHash(algo).update(upload).digest('hex');
