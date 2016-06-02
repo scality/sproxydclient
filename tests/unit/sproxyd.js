@@ -17,18 +17,29 @@ let uploadHash;
 let client;
 let savedKey;
 let server;
-let mdHex = new Buffer('some useless data').toString('hex');
+let md = {};
+let mdHex;
 
-function generateKey() {
-    return crypto.createHash('md5').update(crypto.randomBytes(1024).toString())
-                .digest().slice(0, 20).toString('hex').toUpperCase();
+function generateMD() {
+    return new Buffer(crypto.randomBytes(32)).toString('hex')
 }
 
-function makeResponse(res, code, message, data) {
+function generateKey() {
+    const tmp = crypto.createHash('md5').update(crypto.randomBytes(1024)
+            .toString()).digest().slice(0, 10);
+    const tmp2 = crypto.createHash('md5').update(crypto.randomBytes(1024)
+            .toString()).digest().slice(0, 10);
+    return Buffer.concat([tmp, tmp2]).toString('hex').toUpperCase();
+}
+
+function makeResponse(res, code, message, data, md) {
     res.statusCode = code;
     res.statusMessage = message;
     if (data) {
         res.write(data);
+    }
+    if (md) {
+        res.setHeader('x-scal-usermd', md);
     }
     res.end();
 }
@@ -42,6 +53,9 @@ function handler(req, res) {
             makeResponse(res, 404, 'AlreadyExists');
         } else {
             server[key] = new Buffer(0);
+            if (req.headers['x-scal-usermd']) {
+                md[key] = req.headers['x-scal-usermd'];
+            }
             req.on('data', data => server[key] = Buffer
                    .concat([ server[key], data ]))
             .on('end', () => makeResponse(res, 200, 'OK'));
@@ -57,7 +71,16 @@ function handler(req, res) {
             makeResponse(res, 404, 'NoSuchPath');
         } else {
             delete server[key];
+            if (md[key]) {
+                delete md[key];
+            }
             makeResponse(res, 200, 'OK');
+        }
+    } else if (req.method === 'HEAD') {
+        if (server[key]) {
+            makeResponse(res, 200, 'OK', null, md[key]);
+        } else {
+            makeResponse(res, 404, 'NoSuchPath');
         }
     }
 }
@@ -66,9 +89,9 @@ client = new Sproxy({ bootstrap: [ '127.0.0.1:9000' ] });
 assert.deepStrictEqual(client.bootstrap[0][0], '127.0.0.1');
 assert.deepStrictEqual(client.bootstrap[0][1], '9000');
 assert.deepStrictEqual(client.path, '/proxy/arc/');
-server = http.createServer(handler).listen(9000);
 
-crypto.getHashes().forEach(algo => {
+describe('Create the server', () => {
+
     describe(`Requesting Sproxyd ${algo}`, function tests() {
         before('initialize a new sproxyd client and fake server', done => {
             uploadHash = crypto.createHash(algo).update(upload).digest('hex');
@@ -137,8 +160,27 @@ crypto.getHashes().forEach(algo => {
         });
 
         it('should put an empty object via sproxyd', done => {
-            client.putEmptyObject(generateKey(), mdHex, reqUid, (err, key) => {
+            savedKey = generateKey();
+            mdHex = generateMD();
+            client.putEmptyObject(savedKey, mdHex, reqUid, (err, key) => {
                 done(err);
+            });
+        });
+
+        it('Should get the md of the object', done => {
+            client.getHEAD(savedKey, reqUid, (err, data) => {
+                assert.strictEqual(err, null);
+                assert.strictEqual(data, mdHex);
+               done();
+            });
+        });
+
+        it('Get HEAD should return an error', done => {
+            client.getHEAD(generateKey(), reqUid, err => {
+                assert.notStrictEqual(err, null);
+                assert.notStrictEqual(err, undefined);
+                assert.strictEqual(err.code, 404);
+                done();
             });
         });
     });
