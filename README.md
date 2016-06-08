@@ -3,6 +3,12 @@
 [![CircleCI][badgepub]](https://circleci.com/gh/scality/sproxydclient)
 [![Scality CI][badgepriv]](http://ci.ironmann.io/gh/scality/sproxydclient)
 
+## Contributing
+
+In order to contribute, please follow the
+[Contributing Guidelines](
+https://github.com/scality/Guidelines/blob/master/CONTRIBUTING.md).
+
 ## Usage
 
 ### Installation
