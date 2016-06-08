@@ -1,6 +1,6 @@
 {
   "name": "sproxydclient",
-  "version": "1.0.1-beta2",
+  "version": "1.0.0",
   "description": "sproxyd client",
   "main": "index.js",
   "scripts": {
@@ -11,11 +11,7 @@
     "sproxyd",
     "ring"
   ],
-  "author": {
-    "name": "Michael Zapata",
-    "email": "michael.zapata@scality.com",
-    "url": "http://www.scality.com/"
-  },
+  "author": "Giorgio Regni",
   "dependencies": {
     "bunyan-logstash": "^0.3.4",
     "werelogs": "scality/werelogs"
@@ -23,7 +19,7 @@
   "devDependencies": {
     "mocha": "^2.3.4"
   },
-  "license": "BSD-2-Clause",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/scality/sproxyd/issues"
   },
