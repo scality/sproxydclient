@@ -13,7 +13,6 @@
   ],
   "author": "Giorgio Regni",
   "dependencies": {
-    "bunyan-logstash": "^0.3.4",
     "werelogs": "scality/werelogs"
   },
   "devDependencies": {
