@@ -21,8 +21,8 @@
     "bunyan-logstash": "^0.3.4",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.0.0",
-    "eslint-config-ironman": "scality/IronMan-Guidelines#rel/1.0",
-    "werelogs": "scality/werelogs#rel/1.0"
+    "eslint-config-ironman": "scality/Guidelines#rel/1.1",
+    "werelogs": "scality/werelogs#rel/1.1"
   },
   "devDependencies": {
     "mocha": "^2.3.4"
