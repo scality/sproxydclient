@@ -117,7 +117,7 @@ crypto.getHashes().forEach(algo => {
             upStream.push(upload);
             upStream.push(null);
             upStream.contentHash = 'invaliddigest';
-            client.put(upStream, parameters, reqUid, err => {
+            client.put(upStream, upload.length, parameters, reqUid, err => {
                 if (err === 'InvalidDigest') { return done(); }
                 done(new Error('did not raise an error'));
             });
@@ -128,7 +128,7 @@ crypto.getHashes().forEach(algo => {
             upStream.push(upload);
             upStream.push(null);
             upStream.contentHash = uploadHash;
-            client.put(upStream, parameters, reqUid, (err, key) => {
+            client.put(upStream, upload.length, parameters, reqUid, (err, key) => {
                 savedKey = key;
                 assert.strictEqual(upStream.calculatedHash, uploadHash);
                 done(err);
@@ -165,7 +165,7 @@ crypto.getHashes().forEach(algo => {
             const upStream = new stream.Readable;
             upStream.push(upload);
             upStream.push(null);
-            client.put(upStream, parameters, reqUid, (err, key) => {
+            client.put(upStream, upload.length, parameters, reqUid, (err, key) => {
                 savedKey = key;
                 assert.strictEqual(upStream.calculatedHash, uploadHash);
                 done(err);

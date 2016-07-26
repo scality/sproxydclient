@@ -42,7 +42,7 @@ var client = new SproxydClient(opts);
 
 ```es6
 assert(stream instanceof stream.Readable);
-Client.put(stream: http.IncomingMessage, (err: Error, key: string) => {});
+Client.put(stream: stream.Readable, size: number, (err: Error, key: string) => {});
 ```
 
 #### GET
