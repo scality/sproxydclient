@@ -13,7 +13,6 @@ const owner = 'glados';
 const parameters = { bucketName, namespace, owner };
 const reqUid = 'REQ1';
 const upload = crypto.randomBytes(9000);
-let uploadHash;
 let client;
 let savedKey;
 let server;
@@ -107,30 +106,16 @@ describe('Create the server', () => {
 crypto.getHashes().forEach(algo => {
     describe(`Requesting Sproxyd ${algo}`, function tests() {
         before('initialize a new sproxyd client and fake server', done => {
-            uploadHash = crypto.createHash(algo).update(upload).digest('hex');
             parameters.algo = algo;
             done();
-        });
-
-        it(`should fail to put some data with wrong ${algo} via sproxyd`, done => {
-            const upStream = new stream.Readable;
-            upStream.push(upload);
-            upStream.push(null);
-            upStream.contentHash = 'invaliddigest';
-            client.put(upStream, upload.length, parameters, reqUid, err => {
-                if (err === 'InvalidDigest') { return done(); }
-                done(new Error('did not raise an error'));
-            });
         });
 
         it('should put some data via sproxyd', done => {
             const upStream = new stream.Readable;
             upStream.push(upload);
             upStream.push(null);
-            upStream.contentHash = uploadHash;
             client.put(upStream, upload.length, parameters, reqUid, (err, key) => {
                 savedKey = key;
-                assert.strictEqual(upStream.calculatedHash, uploadHash);
                 done(err);
             });
         });
@@ -167,7 +152,6 @@ crypto.getHashes().forEach(algo => {
             upStream.push(null);
             client.put(upStream, upload.length, parameters, reqUid, (err, key) => {
                 savedKey = key;
-                assert.strictEqual(upStream.calculatedHash, uploadHash);
                 done(err);
             });
         });
