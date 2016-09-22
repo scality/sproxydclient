@@ -1,16 +1,16 @@
-'use strict';
+'use strict'; // eslint-disable-line strict
 
 const assert = require('assert');
 
 const keygen = require('../../lib/keygen');
 
 const bucketName = 'vogosphere';
-const cos = Buffer.from([ 0x70 ]);
+const cos = Buffer.from([0x70]);
 const cosAsStr = cos.toString('hex').toUpperCase();
 const namespace = 'poem';
 const owner = 'jeltz';
 const params = { bucketName, namespace, owner };
-const sid = Buffer.from([ 0x59 ]).toString('hex').toUpperCase();
+const sid = Buffer.from([0x59]).toString('hex').toUpperCase();
 
 describe('Key generation', () => {
     it('should only create valid keys', () => {
@@ -19,7 +19,9 @@ describe('Key generation', () => {
             assert.strictEqual(key.slice(30, 32), sid);
             assert.strictEqual(key.slice(38, 40), cosAsStr);
             return key.slice(16, 32);
-        }).reduce((prev, current) => prev === current ? current : false);
+        }).reduce((prev, current) => { // eslint-disable-line arrow-body-style
+            return prev === current ? current : false;
+        });
         assert(result);
     });
 });
