@@ -13,7 +13,7 @@
   ],
   "author": "Giorgio Regni",
   "dependencies": {
-    "werelogs": "scality/werelogs#rel/6.2"
+    "werelogs": "scality/werelogs#wip/hrtimestamp"
   },
   "devDependencies": {
     "mocha": "^2.3.4"
