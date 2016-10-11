@@ -20,7 +20,7 @@ let md = {};
 let mdHex;
 
 function generateMD() {
-    return new Buffer(crypto.randomBytes(32)).toString('hex')
+    return Buffer.from(crypto.randomBytes(32)).toString('hex')
 }
 
 function generateKey() {
@@ -51,7 +51,7 @@ function handler(req, res) {
         if (server[key]) {
             makeResponse(res, 404, 'AlreadyExists');
         } else {
-            server[key] = new Buffer(0);
+            server[key] = Buffer.alloc(0);
             if (req.headers['x-scal-usermd']) {
                 md[key] = req.headers['x-scal-usermd'];
             }
@@ -122,7 +122,7 @@ crypto.getHashes().forEach(algo => {
 
         it('should get some data via sproxyd', done => {
             client.get(savedKey, undefined, reqUid, (err, stream) => {
-                let ret = new Buffer(0);
+                let ret = Buffer.alloc(0);
                 if (err) { return done(err); }
                 stream.on('data', val => ret = Buffer.concat([ret, val]));
                 stream.on('end', () => {
@@ -182,4 +182,3 @@ crypto.getHashes().forEach(algo => {
         });
     });
 });
-

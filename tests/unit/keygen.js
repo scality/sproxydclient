@@ -5,12 +5,12 @@ const assert = require('assert');
 const keygen = require('../../lib/keygen');
 
 const bucketName = 'vogosphere';
-const cos = new Buffer([ 0x70 ]);
+const cos = Buffer.from([ 0x70 ]);
 const cosAsStr = cos.toString('hex').toUpperCase();
 const namespace = 'poem';
 const owner = 'jeltz';
 const params = { bucketName, namespace, owner };
-const sid = new Buffer([ 0x59 ]).toString('hex').toUpperCase();
+const sid = Buffer.from([ 0x59 ]).toString('hex').toUpperCase();
 
 describe('Key generation', () => {
     it('should only create valid keys', () => {
