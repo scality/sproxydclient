@@ -1,4 +1,4 @@
-'use strict';
+'use strict'; // eslint-disable-line strict
 
 const assert = require('assert');
 const crypto = require('crypto');
@@ -13,14 +13,13 @@ const owner = 'glados';
 const parameters = { bucketName, namespace, owner };
 const reqUid = 'REQ1';
 const upload = crypto.randomBytes(9000);
-let client;
 let savedKey;
 let server;
-let md = {};
+const md = {};
 let mdHex;
 
 function generateMD() {
-    return Buffer.from(crypto.randomBytes(32)).toString('hex')
+    return Buffer.from(crypto.randomBytes(32)).toString('hex');
 }
 
 function generateKey() {
@@ -32,8 +31,10 @@ function generateKey() {
 }
 
 function makeResponse(res, code, message, data, md) {
+    /* eslint-disable no-param-reassign */
     res.statusCode = code;
     res.statusMessage = message;
+    /* eslint-enable no-param-reassign */
     if (data) {
         res.write(data);
     }
@@ -55,8 +56,10 @@ function handler(req, res) {
             if (req.headers['x-scal-usermd']) {
                 md[key] = req.headers['x-scal-usermd'];
             }
-            req.on('data', data => server[key] = Buffer
-                   .concat([ server[key], data ]))
+            req.on('data', data => {
+                server[key] = Buffer
+                   .concat([server[key], data]);
+            })
             .on('end', () => makeResponse(res, 200, 'OK'));
         }
     } else if (req.method === 'GET') {
@@ -84,13 +87,12 @@ function handler(req, res) {
     }
 }
 
-client = new Sproxy({ bootstrap: [ '127.0.0.1:9000' ] });
+const client = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
 assert.deepStrictEqual(client.bootstrap[0][0], '127.0.0.1');
 assert.deepStrictEqual(client.bootstrap[0][1], '9000');
 assert.deepStrictEqual(client.path, '/proxy/arc/');
 
 describe('Create the server', () => {
-
     it('Listen', done => {
         server = http.createServer(handler).listen(9000);
         server.on('listening', () => {
@@ -104,7 +106,7 @@ describe('Create the server', () => {
 });
 
 crypto.getHashes().forEach(algo => {
-    describe(`Requesting Sproxyd ${algo}`, function tests() {
+    describe(`Requesting Sproxyd ${algo}`, () => {
         before('initialize a new sproxyd client and fake server', done => {
             parameters.algo = algo;
             done();
@@ -114,21 +116,27 @@ crypto.getHashes().forEach(algo => {
             const upStream = new stream.Readable;
             upStream.push(upload);
             upStream.push(null);
-            client.put(upStream, upload.length, parameters, reqUid, (err, key) => {
-                savedKey = key;
-                done(err);
-            });
+            client.put(upStream, upload.length, parameters, reqUid,
+                       (err, key) => {
+                           savedKey = key;
+                           done(err);
+                       });
         });
 
         it('should get some data via sproxyd', done => {
             client.get(savedKey, undefined, reqUid, (err, stream) => {
                 let ret = Buffer.alloc(0);
-                if (err) { return done(err); }
-                stream.on('data', val => ret = Buffer.concat([ret, val]));
-                stream.on('end', () => {
-                    assert.deepStrictEqual(ret, upload);
-                    done();
-                });
+                if (err) {
+                    done(err);
+                } else {
+                    stream.on('data', val => {
+                        ret = Buffer.concat([ret, val]);
+                    });
+                    stream.on('end', () => {
+                        assert.deepStrictEqual(ret, upload);
+                        done();
+                    });
+                }
             });
         });
 
@@ -150,16 +158,17 @@ crypto.getHashes().forEach(algo => {
             const upStream = new stream.Readable;
             upStream.push(upload);
             upStream.push(null);
-            client.put(upStream, upload.length, parameters, reqUid, (err, key) => {
-                savedKey = key;
-                done(err);
-            });
+            client.put(upStream, upload.length, parameters, reqUid,
+                       (err, key) => {
+                           savedKey = key;
+                           done(err);
+                       });
         });
 
         it('should put an empty object via sproxyd', done => {
             savedKey = generateKey();
             mdHex = generateMD();
-            client.putEmptyObject(savedKey, mdHex, reqUid, (err, key) => {
+            client.putEmptyObject(savedKey, mdHex, reqUid, err => {
                 done(err);
             });
         });
@@ -168,7 +177,7 @@ crypto.getHashes().forEach(algo => {
             client.getHEAD(savedKey, reqUid, (err, data) => {
                 assert.strictEqual(err, null);
                 assert.strictEqual(data, mdHex);
-               done();
+                done();
             });
         });
 

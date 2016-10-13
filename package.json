@@ -4,6 +4,7 @@
   "description": "sproxyd client",
   "main": "index.js",
   "scripts": {
+    "lint": "eslint $(git ls-files '*.js')",
     "test": "mocha tests/unit"
   },
   "repository": "scality/sproxyd",
@@ -16,6 +17,9 @@
     "werelogs": "scality/werelogs"
   },
   "devDependencies": {
+    "eslint": "^2.4.0",
+    "eslint-config-airbnb": "^6.0.0",
+    "eslint-config-scality": "scality/Guidelines",
     "mocha": "^2.3.4"
   },
   "license": "Apache-2.0",
