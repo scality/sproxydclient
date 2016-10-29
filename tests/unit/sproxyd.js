@@ -46,7 +46,9 @@ function makeResponse(res, code, message, data, md) {
 
 function handler(req, res) {
     const key = req.url.slice(-40);
-    if (!req.url.startsWith('/proxy/arc')) {
+    if (req.url === '/.conf' && req.method === 'GET') {
+        makeResponse(res, 200, 'OK');
+    } else if (!req.url.startsWith('/proxy/arc')) {
         makeResponse(res, 404, 'NoSuchPath');
     } else if (req.method === 'PUT') {
         if (server[key]) {
@@ -188,6 +190,16 @@ crypto.getHashes().forEach(algo => {
                 assert.strictEqual(err.code, 404);
                 done();
             });
+        });
+    });
+});
+
+describe('Healthcheck', () => {
+    it('should return 200 OK', done => {
+        client.healthcheck(null, (err, response) => {
+            assert.strictEqual(err, null);
+            assert.strictEqual(response.statusCode, 200);
+            done();
         });
     });
 });
