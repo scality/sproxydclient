@@ -46,7 +46,7 @@ function makeResponse(res, code, message, data, md) {
 
 function handler(req, res) {
     const key = req.url.slice(-40);
-    if (req.url === '/.conf' && req.method === 'GET') {
+    if (req.url === '/proxy/arc/.conf' && req.method === 'GET') {
         makeResponse(res, 200, 'OK');
     } else if (!req.url.startsWith('/proxy/arc')) {
         makeResponse(res, 404, 'NoSuchPath');
