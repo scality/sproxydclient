@@ -7,6 +7,7 @@ const stream = require('stream');
 
 const Sproxy = require('../../index');
 
+const lockedObjectKey = 'locked-object000000011111111111111111111';
 const bucketName = 'aperture';
 const namespace = 'default';
 const owner = 'glados';
@@ -69,7 +70,9 @@ function handler(req, res) {
             makeResponse(res, 200, 'OK', server[key]);
         }
     } else if (req.method === 'DELETE') {
-        if (!server[key]) {
+        if (key === lockedObjectKey) {
+            makeResponse(res, 423, 'Locked');
+        } else if (!server[key]) {
             makeResponse(res, 404, 'NoSuchPath');
         } else {
             delete server[key];
@@ -163,6 +166,10 @@ crypto.getHashes().forEach(algo => {
                            savedKey = key;
                            done(err);
                        });
+        });
+
+        it('should return success when deleting a locked object', done => {
+            client.delete(lockedObjectKey, reqUid, done);
         });
 
         it('should put an empty object via sproxyd', done => {
