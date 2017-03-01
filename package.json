@@ -1,6 +1,9 @@
 {
   "name": "sproxydclient",
-  "version": "1.1.0",
+  "engines": {
+    "node": "6.9.5"
+  },
+  "version": "7.0.0",
   "description": "sproxyd client",
   "main": "index.js",
   "scripts": {
@@ -18,6 +21,7 @@
   },
   "devDependencies": {
     "eslint": "^2.4.0",
+    "eslint-plugin-react": "^4.3.0",
     "eslint-config-airbnb": "^6.0.0",
     "eslint-config-scality": "scality/Guidelines",
     "mocha": "^2.3.4"
