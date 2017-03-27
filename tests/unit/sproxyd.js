@@ -19,6 +19,16 @@ let server;
 const md = {};
 let mdHex;
 
+function clientAssert(bootstrap, sproxydPath) {
+    assert.deepStrictEqual(bootstrap[0][0], '127.0.0.1');
+    if (bootstrap[0][1] === '9000') {
+        assert.strictEqual(sproxydPath, '/proxy/arc/');
+    } else {
+        assert.deepStrictEqual(bootstrap[0][1], '9001');
+        assert.strictEqual(sproxydPath, '/custom/path');
+    }
+}
+
 function generateMD() {
     return Buffer.from(crypto.randomBytes(32)).toString('hex');
 }
@@ -92,10 +102,11 @@ function handler(req, res) {
     }
 }
 
+const clientCustomPath =
+    new Sproxy({ bootstrap: ['127.0.0.1:9001'], path: '/custom/path' });
+clientAssert(clientCustomPath.bootstrap, clientCustomPath.path);
 const client = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
-assert.deepStrictEqual(client.bootstrap[0][0], '127.0.0.1');
-assert.deepStrictEqual(client.bootstrap[0][1], '9000');
-assert.deepStrictEqual(client.path, '/proxy/arc/');
+clientAssert(client.bootstrap, client.path);
 
 describe('Create the server', () => {
     it('Listen', done => {
