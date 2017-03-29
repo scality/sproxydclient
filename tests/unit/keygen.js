@@ -5,8 +5,8 @@ const assert = require('assert');
 const keygen = require('../../lib/keygen');
 
 const bucketName = 'vogosphere';
-const cos = Buffer.from([0x70]);
-const cosAsStr = cos.toString('hex').toUpperCase();
+const cos = 0x7;
+const cosAsStr = (cos << 4).toString(16).toUpperCase();
 const namespace = 'poem';
 const owner = 'jeltz';
 const params = { bucketName, namespace, owner };
