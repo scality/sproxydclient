@@ -18,6 +18,8 @@ let savedKey;
 let server;
 const md = {};
 let mdHex;
+let expectedRequestHeaders;
+let notExpectedRequestHeaders;
 
 function generateMD() {
     return Buffer.from(crypto.randomBytes(32)).toString('hex');
@@ -47,6 +49,17 @@ function makeResponse(res, code, message, data, md) {
 
 function handler(req, res) {
     const key = req.url.slice(-40);
+    if (expectedRequestHeaders) {
+        Object.keys(expectedRequestHeaders).forEach(header => {
+            assert.strictEqual(req.headers[header],
+                               expectedRequestHeaders[header]);
+        });
+    }
+    if (notExpectedRequestHeaders) {
+        notExpectedRequestHeaders.forEach(header => {
+            assert.strictEqual(req.headers[header], undefined);
+        });
+    }
     if (req.url === '/proxy/arc/.conf' && req.method === 'GET') {
         makeResponse(res, 200, 'OK');
     } else if (!req.url.startsWith('/proxy/arc')) {
@@ -96,6 +109,17 @@ assert.deepStrictEqual(client.bootstrap[0][0], '127.0.0.1');
 assert.deepStrictEqual(client.bootstrap[0][1], '9000');
 assert.deepStrictEqual(client.path, '/proxy/arc/');
 
+const clientNonImmutable = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
+assert.deepStrictEqual(clientNonImmutable.bootstrap[0][0], '127.0.0.1');
+assert.deepStrictEqual(clientNonImmutable.bootstrap[0][1], '9000');
+assert.deepStrictEqual(clientNonImmutable.path, '/proxy/arc/');
+
+const clientImmutable = new Sproxy({ bootstrap: ['127.0.0.1:9000'],
+                                     immutable: true });
+assert.deepStrictEqual(clientImmutable.bootstrap[0][0], '127.0.0.1');
+assert.deepStrictEqual(clientImmutable.bootstrap[0][1], '9000');
+assert.deepStrictEqual(clientImmutable.path, '/proxy/arc/');
+
 describe('Sproxyd client', () => {
     before('Create the server', done => {
         server = http.createServer(handler).listen(9000);
@@ -109,84 +133,106 @@ describe('Sproxyd client', () => {
     });
 
     after('Shutdown the server', done => {
-        client.destroy();
+        clientNonImmutable.destroy();
+        clientImmutable.destroy();
         server.close(done);
     });
 
-    it('should put some data via sproxyd', done => {
-        const upStream = new stream.Readable;
-        upStream.push(upload);
-        upStream.push(null);
-        client.put(upStream, upload.length, parameters, reqUid,
-                   (err, key) => {
-                       savedKey = key;
-                       done(err);
-                   });
-    });
+    [false, true].forEach(immutable => {
+        let client;
+        describe(immutable ? 'immutable' : 'non-immutable', () => {
+            before(() => {
+                if (immutable) {
+                    client = clientImmutable;
+                    expectedRequestHeaders = {
+                        'x-scal-replica-policy': 'immutable',
+                    };
+                } else {
+                    client = clientNonImmutable;
+                    notExpectedRequestHeaders = ['x-scal-replica-policy'];
+                }
+            });
+            after(() => {
+                expectedRequestHeaders = undefined;
+                notExpectedRequestHeaders = undefined;
+            });
+            it('should put some data via sproxyd', done => {
+                const upStream = new stream.Readable;
+                upStream.push(upload);
+                upStream.push(null);
+                client.put(upStream, upload.length, parameters, reqUid,
+                           (err, key) => {
+                               savedKey = key;
+                               done(err);
+                           });
+            });
 
-    it('should get some data via sproxyd', done => {
-        client.get(savedKey, undefined, reqUid, (err, stream) => {
-            let ret = Buffer.alloc(0);
-            if (err) {
-                done(err);
-            } else {
-                stream.on('data', val => {
-                    ret = Buffer.concat([ret, val]);
+            it('should get some data via sproxyd', done => {
+                client.get(savedKey, undefined, reqUid, (err, stream) => {
+                    let ret = Buffer.alloc(0);
+                    if (err) {
+                        done(err);
+                    } else {
+                        stream.on('data', val => {
+                            ret = Buffer.concat([ret, val]);
+                        });
+                        stream.on('end', () => {
+                            assert.deepStrictEqual(ret, upload);
+                            done();
+                        });
+                    }
                 });
-                stream.on('end', () => {
-                    assert.deepStrictEqual(ret, upload);
+            });
+
+            it('should delete some data via sproxyd', done => {
+                client.delete(savedKey, reqUid, done);
+            });
+
+            it('should fail getting non existing data', done => {
+                client.get(savedKey, undefined, reqUid, err => {
+                    const error = new Error(404);
+                    error.isExpected = true;
+                    error.code = 404;
+                    assert.deepStrictEqual(err, error,
+                                           'Doesn\'t fail properly');
                     done();
                 });
-            }
-        });
-    });
+            });
 
-    it('should delete some data via sproxyd', done => {
-        client.delete(savedKey, reqUid, done);
-    });
+            it('should return success when deleting a locked object', done => {
+                client.delete(lockedObjectKey, reqUid, done);
+            });
 
-    it('should fail getting non existing data', done => {
-        client.get(savedKey, undefined, reqUid, err => {
-            const error = new Error(404);
-            error.isExpected = true;
-            error.code = 404;
-            assert.deepStrictEqual(err, error, 'Doesn\'t fail properly');
-            done();
-        });
-    });
+            it('should put an empty object via sproxyd', done => {
+                savedKey = generateKey();
+                mdHex = generateMD();
+                client.putEmptyObject(savedKey, mdHex, reqUid, err => {
+                    done(err);
+                });
+            });
 
-    it('should return success when deleting a locked object', done => {
-        client.delete(lockedObjectKey, reqUid, done);
-    });
+            it('Should get the md of the object', done => {
+                client.getHEAD(savedKey, reqUid, (err, data) => {
+                    assert.strictEqual(err, null);
+                    assert.strictEqual(data, mdHex);
+                    done();
+                });
+            });
 
-    it('should put an empty object via sproxyd', done => {
-        savedKey = generateKey();
-        mdHex = generateMD();
-        client.putEmptyObject(savedKey, mdHex, reqUid, err => {
-            done(err);
-        });
-    });
-
-    it('Should get the md of the object', done => {
-        client.getHEAD(savedKey, reqUid, (err, data) => {
-            assert.strictEqual(err, null);
-            assert.strictEqual(data, mdHex);
-            done();
-        });
-    });
-
-    it('Get HEAD should return an error', done => {
-        client.getHEAD(generateKey(), reqUid, err => {
-            assert.notStrictEqual(err, null);
-            assert.notStrictEqual(err, undefined);
-            assert.strictEqual(err.code, 404);
-            done();
+            it('Get HEAD should return an error', done => {
+                client.getHEAD(generateKey(), reqUid, err => {
+                    assert.notStrictEqual(err, null);
+                    assert.notStrictEqual(err, undefined);
+                    assert.strictEqual(err.code, 404);
+                    done();
+                });
+            });
         });
     });
 
     describe('Healthcheck', () => {
         it('Healthcheck should return 200 OK', done => {
-            client.healthcheck(null, (err, response) => {
+            clientNonImmutable.healthcheck(null, (err, response) => {
                 assert.strictEqual(err, null);
                 assert.strictEqual(response.statusCode, 200);
                 done();
