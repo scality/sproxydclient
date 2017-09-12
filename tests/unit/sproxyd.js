@@ -121,8 +121,10 @@ clientAssert(clientCustomPath.bootstrap, clientCustomPath.path);
 const clientNonImmutable = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
 clientAssert(clientNonImmutable.bootstrap, clientNonImmutable.path);
 
-const clientImmutable = new Sproxy({ bootstrap: ['127.0.0.1:9000'],
-                                     immutable: true });
+const clientImmutable = new Sproxy({
+    bootstrap: ['127.0.0.1:9000'],
+    immutable: true,
+});
 clientAssert(clientImmutable.bootstrap, clientImmutable.path);
 
 describe('Sproxyd client', () => {
