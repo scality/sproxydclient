@@ -3,7 +3,7 @@
   "engines": {
     "node": ">=6.9.5"
   },
-  "version": "7.4.0",
+  "version": "7.4.0-beta",
   "description": "sproxyd client",
   "main": "index.js",
   "scripts": {
@@ -17,12 +17,12 @@
   ],
   "author": "Giorgio Regni",
   "dependencies": {
-    "werelogs": "scality/werelogs#rel/7.4"
+    "werelogs": "scality/werelogs#rel/7.4-beta"
   },
   "devDependencies": {
     "eslint": "2.13.1",
     "eslint-config-airbnb": "6.2.0",
-    "eslint-config-scality": "scality/Guidelines#rel/7.4",
+    "eslint-config-scality": "scality/Guidelines#rel/7.4-beta",
     "mocha": "2.5.3"
   },
   "license": "Apache-2.0",
