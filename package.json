@@ -1,33 +1,33 @@
 {
-  "name": "sproxydclient",
-  "engines": {
-    "node": ">=6.9.5"
-  },
-  "version": "7.4.0",
-  "description": "sproxyd client",
-  "main": "index.js",
-  "scripts": {
-    "lint": "eslint $(git ls-files '*.js')",
-    "test": "mocha tests/unit"
-  },
-  "repository": "scality/sproxyd",
-  "keywords": [
-    "sproxyd",
-    "ring"
-  ],
-  "author": "Giorgio Regni",
-  "dependencies": {
-    "werelogs": "scality/werelogs#rel/7.4"
-  },
-  "devDependencies": {
-    "eslint": "2.13.1",
-    "eslint-config-airbnb": "6.2.0",
-    "eslint-config-scality": "scality/Guidelines#rel/7.4",
-    "mocha": "2.5.3"
-  },
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/scality/sproxyd/issues"
-  },
-  "homepage": "https://github.com/scality/sproxyd#readme"
+    "name": "sproxydclient",
+    "engines": {
+        "node": ">=6.9.5"
+    },
+    "version": "7.4.0.1",
+    "description": "sproxyd client",
+    "main": "index.js",
+    "scripts": {
+        "lint": "eslint $(git ls-files '*.js')",
+        "test": "mocha tests/unit"
+    },
+    "repository": "scality/sproxyd",
+    "keywords": [
+        "sproxyd",
+        "ring"
+    ],
+    "author": "Giorgio Regni",
+    "dependencies": {
+        "werelogs": "scality/werelogs#hotfix/7.4.0"
+    },
+    "devDependencies": {
+        "eslint": "2.13.1",
+        "eslint-config-airbnb": "6.2.0",
+        "eslint-config-scality": "scality/Guidelines#hotfix/7.4.0",
+        "mocha": "2.5.3"
+    },
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/scality/sproxyd/issues"
+    },
+    "homepage": "https://github.com/scality/sproxyd#readme"
 }
