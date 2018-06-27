@@ -17,12 +17,12 @@
   ],
   "author": "Giorgio Regni",
   "dependencies": {
-    "werelogs": "scality/werelogs#rel/7.4"
+    "werelogs": "scality/werelogs#7.4.0.3"
   },
   "devDependencies": {
     "eslint": "2.13.1",
     "eslint-config-airbnb": "6.2.0",
-    "eslint-config-scality": "scality/Guidelines#rel/7.4",
+    "eslint-config-scality": "scality/Guidelines#7.4.0.3",
     "mocha": "2.5.3"
   },
   "license": "Apache-2.0",
