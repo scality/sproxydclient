@@ -17,7 +17,7 @@
   ],
   "author": "Giorgio Regni",
   "dependencies": {
-    "werelogs": "scality/werelogs#0ff7ec82"
+    "werelogs": "scality/werelogs#1a6e052"
   },
   "devDependencies": {
     "eslint": "2.13.1",
