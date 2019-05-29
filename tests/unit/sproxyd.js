@@ -43,6 +43,15 @@ function generateKey() {
     return Buffer.concat([tmp, tmp2]).toString('hex').toUpperCase();
 }
 
+function _batchDelKeys(n) {
+    let iter = n;
+    const list = { keys: [] };
+    while (iter--) {
+        list.keys.push(generateKey());
+    }
+    return list;
+}
+
 function makeResponse(res, code, message, data, md) {
     /* eslint-disable no-param-reassign */
     res.statusCode = code;
@@ -111,6 +120,8 @@ function handler(req, res) {
         } else {
             makeResponse(res, 404, 'NoSuchPath');
         }
+    } else if (req.method === 'POST') {
+        makeResponse(res, 200);
     }
 }
 
@@ -231,6 +242,14 @@ describe('Sproxyd client', () => {
                     assert.notStrictEqual(err, null);
                     assert.notStrictEqual(err, undefined);
                     assert.strictEqual(err.code, 404);
+                    done();
+                });
+            });
+
+            it('should return success for batch delete', done => {
+                const list = _batchDelKeys(5);
+                client.batchDelete(list, reqUid, err => {
+                    assert.strictEqual(err, null);
                     done();
                 });
             });
