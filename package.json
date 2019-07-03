@@ -3,11 +3,7 @@
   "engines": {
     "node": ">=10.16.0"
   },
-<<<<<<< HEAD
   "version": "8.0.0",
-=======
-  "version": "7.4.1",
->>>>>>> origin/w/7.5/improvement/S3C-2288-upgrade-nodejs
   "description": "sproxyd client",
   "main": "index.js",
   "scripts": {
@@ -21,7 +17,7 @@
   ],
   "author": "Giorgio Regni",
   "dependencies": {
-    "werelogs": "scality/werelogs#4e0d97c"
+    "werelogs": "scality/werelogs#351a2a3"
   },
   "devDependencies": {
     "eslint": "2.13.1",
