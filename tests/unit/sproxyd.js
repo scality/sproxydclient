@@ -208,7 +208,7 @@ describe('Sproxyd client', () => {
 
             it('should fail getting non existing data', done => {
                 client.get(savedKey, undefined, reqUid, err => {
-                    const error = new Error(404);
+                    const error = new Error();
                     error.isExpected = true;
                     error.code = 404;
                     assert.deepStrictEqual(err, error,
