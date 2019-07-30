@@ -1,7 +1,7 @@
 {
   "name": "sproxydclient",
   "engines": {
-    "node": ">=10.16.0"
+    "node": ">=10"
   },
   "version": "8.0.0",
   "description": "sproxyd client",
