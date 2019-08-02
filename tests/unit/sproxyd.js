@@ -247,7 +247,7 @@ describe('Sproxyd client', () => {
             });
 
             it('should return success for batch delete', done => {
-                const list = _batchDelKeys(5);
+                const list = _batchDelKeys(2000);
                 client.batchDelete(list, reqUid, err => {
                     assert.strictEqual(err, null);
                     done();
