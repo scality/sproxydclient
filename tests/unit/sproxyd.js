@@ -265,4 +265,14 @@ describe('Sproxyd client', () => {
             });
         });
     });
+
+    describe('Get last request uid', () => {
+        it('should return a request id without colon', done => {
+            const log = clientNonImmutable.createLogger();
+            const lastRequestUid = clientNonImmutable._getLastReqUid(log);
+            assert.notStrictEqual(lastRequestUid, undefined);
+            assert.strictEqual(lastRequestUid.indexOf(':'), -1);
+            done();
+        });
+    });
 });
