@@ -37,9 +37,9 @@ function generateMD() {
 
 function generateKey() {
     const tmp = crypto.createHash('md5').update(crypto.randomBytes(1024)
-            .toString()).digest().slice(0, 10);
+        .toString()).digest().slice(0, 10);
     const tmp2 = crypto.createHash('md5').update(crypto.randomBytes(1024)
-            .toString()).digest().slice(0, 10);
+        .toString()).digest().slice(0, 10);
     return Buffer.concat([tmp, tmp2]).toString('hex').toUpperCase();
 }
 
@@ -71,7 +71,7 @@ function handler(req, res) {
     if (expectedRequestHeaders) {
         Object.keys(expectedRequestHeaders).forEach(header => {
             assert.strictEqual(req.headers[header],
-                               expectedRequestHeaders[header]);
+                expectedRequestHeaders[header]);
         });
     }
     if (notExpectedRequestHeaders) {
@@ -94,7 +94,7 @@ function handler(req, res) {
             req.on('data', data => {
                 server[key] = Buffer.concat([server[key], data]);
             })
-            .on('end', () => makeResponse(res, 200, 'OK'));
+                .on('end', () => makeResponse(res, 200, 'OK'));
         }
     } else if (req.method === 'GET') {
         if (!server[key]) {
@@ -179,10 +179,10 @@ describe('Sproxyd client', () => {
                 upStream.push(upload);
                 upStream.push(null);
                 client.put(upStream, upload.length, parameters, reqUid,
-                           (err, key) => {
-                               savedKey = key;
-                               done(err);
-                           });
+                    (err, key) => {
+                        savedKey = key;
+                        done(err);
+                    });
             });
 
             it('should get some data via sproxyd', done => {
@@ -212,7 +212,7 @@ describe('Sproxyd client', () => {
                     error.isExpected = true;
                     error.code = 404;
                     assert.deepStrictEqual(err, error,
-                                           'Doesn\'t fail properly');
+                        'Doesn\'t fail properly');
                     done();
                 });
             });
@@ -267,12 +267,14 @@ describe('Sproxyd client', () => {
     });
 
     describe('Get last request uid', () => {
-        it('should return a request id without colon', done => {
-            const log = clientNonImmutable.createLogger();
+        it('should return a request id without colon', () => {
+            const uids = 'id1:id2:id3';
+            const log = clientNonImmutable.createLogger(uids);
             const lastRequestUid = clientNonImmutable._getLastReqUid(log);
+            const ids = log.getUids();
             assert.notStrictEqual(lastRequestUid, undefined);
             assert.strictEqual(lastRequestUid.indexOf(':'), -1);
-            done();
+            assert.strictEqual(ids.pop(), lastRequestUid);
         });
     });
 });
