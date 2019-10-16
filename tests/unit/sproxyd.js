@@ -266,12 +266,20 @@ describe('Sproxyd client', () => {
         });
     });
 
-    describe('Get last request uid', () => {
-        it('should return a request id without colon', () => {
-            const uids = 'id1:id2:id3';
-            const log = clientNonImmutable.createLogger(uids);
+    describe('Get request uid', () => {
+        const uids = 'id1:id2:id3';
+        const log = clientNonImmutable.createLogger(uids);
+        const ids = log.getUids();
+
+        it('should return first request id without colon', () => {
+            const firstRequestUid = clientNonImmutable._getFirstReqUid(log);
+            assert.notStrictEqual(firstRequestUid, undefined);
+            assert.strictEqual(firstRequestUid.indexOf(':'), -1);
+            assert.strictEqual(ids[0], firstRequestUid);
+        });
+
+        it('should return last request id without colon', () => {
             const lastRequestUid = clientNonImmutable._getLastReqUid(log);
-            const ids = log.getUids();
             assert.notStrictEqual(lastRequestUid, undefined);
             assert.strictEqual(lastRequestUid.indexOf(':'), -1);
             assert.strictEqual(ids.pop(), lastRequestUid);
