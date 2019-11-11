@@ -175,7 +175,7 @@ describe('Sproxyd client', () => {
                 notExpectedRequestHeaders = undefined;
             });
             it('should put some data via sproxyd', done => {
-                const upStream = new stream.Readable;
+                const upStream = new stream.PassThrough;
                 upStream.push(upload);
                 upStream.push(null);
                 client.put(upStream, upload.length, parameters, reqUid,
@@ -252,6 +252,19 @@ describe('Sproxyd client', () => {
                     assert.strictEqual(err, null);
                     done();
                 });
+            });
+
+            it('should abort an unfinished request', done => {
+                const upStream = new stream.PassThrough;
+                upStream.push(upload.slice(0, upload.length - 10));
+                setTimeout(() => upStream.destroy(), 500);
+                client.put(upStream, upload.length, parameters, reqUid,
+                    err => {
+                        if (err) {
+                            done();
+                        }
+                        assert.fail('expected an immediate error from sproxyd');
+                    });
             });
         });
     });
