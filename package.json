@@ -3,7 +3,7 @@
   "engines": {
     "node": ">=10"
   },
-  "version": "7.4.1",
+  "version": "7.4.6",
   "description": "sproxyd client",
   "main": "index.js",
   "scripts": {
