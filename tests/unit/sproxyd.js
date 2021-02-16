@@ -1,6 +1,7 @@
 'use strict'; // eslint-disable-line strict
 
 const assert = require('assert');
+const async = require('async');
 const crypto = require('crypto');
 const http = require('http');
 const stream = require('stream');
@@ -129,14 +130,18 @@ const clientCustomPath =
     new Sproxy({ bootstrap: ['127.0.0.1:9001'], path: '/custom/path' });
 clientAssert(clientCustomPath.bootstrap, clientCustomPath.path);
 
-const clientNonImmutable = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
+const clientNonImmutable = new Sproxy({ bootstrap: ['127.0.0.1:9000','127.0.0.1:9000'] });
 clientAssert(clientNonImmutable.bootstrap, clientNonImmutable.path);
 
 const clientImmutable = new Sproxy({
-    bootstrap: ['127.0.0.1:9000'],
+    bootstrap: ['127.0.0.1:9000','127.0.0.1:9000'],
     immutable: true,
 });
 clientAssert(clientImmutable.bootstrap, clientImmutable.path);
+
+const clientWithServerDown = new Sproxy({
+    bootstrap: ['127.0.0.1:9999','127.0.0.1:9000'],
+});
 
 describe('Sproxyd client', () => {
     before('Create the server', done => {
@@ -153,6 +158,7 @@ describe('Sproxyd client', () => {
     after('Shutdown the server', done => {
         clientNonImmutable.destroy();
         clientImmutable.destroy();
+        clientWithServerDown.destroy();
         server.close(done);
     });
 
@@ -254,18 +260,68 @@ describe('Sproxyd client', () => {
                 });
             });
 
-            it('should abort an unfinished request', done => {
+            it('put: should abort an unfinished request', done => {
                 const upStream = new stream.PassThrough;
                 upStream.push(upload.slice(0, upload.length - 10));
-                setTimeout(() => upStream.destroy(), 500);
+                upStream.push(null);
                 client.put(upStream, upload.length, parameters, reqUid,
                     err => {
                         if (err) {
-                            done();
+                            assert.strictEqual(err.message, 'Timeout on the socket');
+                            return done();
                         }
-                        assert.fail('expected an immediate error from sproxyd');
+                        return assert.fail('expected an error from sproxyd');
                     });
-            });
+            }).timeout(120000);
+
+            it('put: should not timeout when data is flowing', done => {
+                const upStream = new stream.PassThrough;
+                let index = 0;
+                const chunk_size = upload.length / 5;
+                async.timesSeries(5, (i, next) => {
+                    upStream.push(upload.slice(index, index + chunk_size));
+                    index += chunk_size;
+                    setTimeout(next, 1000);
+                }, err => {
+                    upStream.push(null);
+                });
+                client.put(upStream, upload.length, parameters, reqUid,
+                    err => {
+                        if (err) {
+                            return done(err);
+                        }
+                        return done();
+                    });
+            }).timeout(120000);
+
+            it('put: should abort if stream destroyed', done => {
+                const upStream = new stream.PassThrough;
+                upStream.push(upload.slice(0, upload.length - 10));
+                client.put(upStream, upload.length, parameters, reqUid,
+                    err => {
+                        if (err) {
+                            assert.strictEqual(err.message, 'Timeout on the socket');
+                            return done();
+                        }
+                        return assert.fail('expected an error from sproxyd');
+                    });
+                upStream.destroy();
+            }).timeout(120000);
+
+            it('put: should catch if stream destroyed with error', done => {
+                let msg = 'readable destroyed with error';
+                const upStream = new stream.PassThrough;
+                upStream.push(upload.slice(0, upload.length - 10));
+                client.put(upStream, upload.length, parameters, reqUid,
+                    err => {
+                        if (err) {
+                            assert.strictEqual(err.message, msg);
+                            return done();
+                        }
+                        return assert.fail('expected an error from sproxyd');
+                    });
+                upStream.destroy(new Error(msg));
+            }).timeout(120000);
         });
     });
 
@@ -297,5 +353,42 @@ describe('Sproxyd client', () => {
             assert.strictEqual(lastRequestUid.indexOf(':'), -1);
             assert.strictEqual(ids.pop(), lastRequestUid);
         });
+    });
+
+    describe('should retry on request timeout', () => {
+        it('put: should not retry on server down but shift the bootstrap', done => {
+            while (clientWithServerDown.getCurrentBootstrap()[1] !== '9999') {
+                clientWithServerDown._shiftCurrentBootstrapToEnd(clientWithServerDown.createLogger(reqUid));
+            }
+            async.waterfall([
+                next => {
+                    const upStream = new stream.PassThrough;
+                    upStream.push(upload.slice(0, upload.length));
+                    upStream.push(null);
+                    clientWithServerDown.put(upStream, upload.length, parameters, reqUid,
+                        err => {
+                            if (err) {
+                                if (err.code !== 'ECONNREFUSED') {
+                                    return next(new Error('ECONNREFUSED was expected'));
+                                }
+                                return next();
+                            }
+                            return next(new Error('should have fail at the first put()'));
+                        });
+                },
+                next => {
+                    const upStream = new stream.PassThrough;
+                    upStream.push(upload.slice(0, upload.length));
+                    upStream.push(null);
+                    clientWithServerDown.put(upStream, upload.length, parameters, reqUid,
+                        err => {
+                            if (err) {
+                                return next(err);
+                            }
+                            return next();
+                        });
+                },
+            ], err => done(err));
+        }).timeout(120000);
     });
 });
