@@ -262,8 +262,9 @@ describe('Sproxyd client', () => {
                     err => {
                         if (err) {
                             done();
+                        } else {
+                            assert.fail('expected an immediate error from sproxyd');
                         }
-                        assert.fail('expected an immediate error from sproxyd');
                     });
             });
         });
