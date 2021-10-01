@@ -1,4 +1,5 @@
-'use strict'; // eslint-disable-line strict
+
+// eslint-disable-line strict
 
 const assert = require('assert');
 const crypto = require('crypto');
@@ -125,8 +126,7 @@ function handler(req, res) {
     }
 }
 
-const clientCustomPath =
-    new Sproxy({ bootstrap: ['127.0.0.1:9001'], path: '/custom/path' });
+const clientCustomPath = new Sproxy({ bootstrap: ['127.0.0.1:9001'], path: '/custom/path' });
 clientAssert(clientCustomPath.bootstrap, clientCustomPath.path);
 
 const clientNonImmutable = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
@@ -175,7 +175,7 @@ describe('Sproxyd client', () => {
                 notExpectedRequestHeaders = undefined;
             });
             it('should put some data via sproxyd', done => {
-                const upStream = new stream.PassThrough;
+                const upStream = new stream.PassThrough();
                 upStream.push(upload);
                 upStream.push(null);
                 client.put(upStream, upload.length, parameters, reqUid,
@@ -255,15 +255,16 @@ describe('Sproxyd client', () => {
             });
 
             it('should abort an unfinished request', done => {
-                const upStream = new stream.PassThrough;
+                const upStream = new stream.PassThrough();
                 upStream.push(upload.slice(0, upload.length - 10));
                 setTimeout(() => upStream.destroy(), 500);
                 client.put(upStream, upload.length, parameters, reqUid,
                     err => {
                         if (err) {
                             done();
+                        } else {
+                            assert.fail('expected an immediate error from sproxyd');
                         }
-                        assert.fail('expected an immediate error from sproxyd');
                     });
             });
         });
