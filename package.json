@@ -25,9 +25,6 @@
     "eslint-config-airbnb": "^18.2.1",
     "eslint-config-scality": "scality/Guidelines#71a059ad",
     "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jsx-a11y": "^6.4.1",
-    "eslint-plugin-react": "^7.21.5",
-    "eslint-plugin-react-hooks": "^4",
     "mocha": "^8.4.0"
   },
   "license": "Apache-2.0",
