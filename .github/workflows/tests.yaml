@@ -1,0 +1,24 @@
+---
+name: tests
+
+on:
+  push:
+    branches-ignore:
+    - 'development/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '10'
+        cache: 'yarn'
+    - name: install dependencies
+      run: yarn install --frozen-lockfile
+    - name: lint javascript
+      run: yarn --silent lint -- --max-warnings 0
+    - name: run tests
+      run: yarn test
