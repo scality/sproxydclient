@@ -23,7 +23,7 @@
   "devDependencies": {
     "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.2.1",
-    "eslint-config-scality": "scality/Guidelines#improvement/GDL-5-node-16-upgrade",
+    "eslint-config-scality": "scality/Guidelines#w/7.10/improvement/GDL-5-node-16-upgrade",
     "eslint-plugin-import": "^2.22.1",
     "mocha": "^8.4.0"
   },
