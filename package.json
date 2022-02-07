@@ -3,7 +3,7 @@
   "engines": {
     "node": ">=16"
   },
-  "version": "7.4.7",
+  "version": "7.10.2",
   "description": "sproxyd client",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "devDependencies": {
     "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.2.1",
-    "eslint-config-scality": "scality/Guidelines#w/7.10/improvement/GDL-5-node-16-upgrade",
+    "eslint-config-scality": "scality/Guidelines#7.10.2",
     "eslint-plugin-import": "^2.22.1",
     "mocha": "^8.4.0"
   },
