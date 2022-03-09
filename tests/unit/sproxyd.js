@@ -176,8 +176,8 @@ describe('Sproxyd client', () => {
             });
             it('should put some data via sproxyd', done => {
                 const upStream = new stream.PassThrough();
-                upStream.push(upload);
-                upStream.push(null);
+                upStream.write(upload);
+                upStream.end();
                 client.put(upStream, upload.length, parameters, reqUid,
                     (err, key) => {
                         savedKey = key;
@@ -254,20 +254,19 @@ describe('Sproxyd client', () => {
                 });
             });
 
-            // SPRXCLT-5 Handle the TCP memory leak during chunked uploads
-            // it('should abort an unfinished request', done => {
-            //     const upStream = new stream.PassThrough();
-            //     upStream.push(upload.slice(0, upload.length - 10));
-            //     setTimeout(() => upStream.destroy(), 500);
-            //     client.put(upStream, upload.length, parameters, reqUid,
-            //         err => {
-            //             if (err) {
-            //                 done();
-            //             } else {
-            //                 assert.fail('expected an immediate error from sproxyd');
-            //             }
-            //         });
-            // });
+            it('should abort an unfinished request', done => {
+                const upStream = new stream.PassThrough();
+                upStream.write(upload.slice(0, upload.length - 10));
+                setTimeout(() => upStream.destroy(), 500);
+                client.put(upStream, upload.length, parameters, reqUid,
+                    err => {
+                        if (err) {
+                            done();
+                        } else {
+                            assert.fail('expected an immediate error from sproxyd');
+                        }
+                    });
+            });
         });
     });
 
