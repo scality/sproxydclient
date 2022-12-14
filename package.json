@@ -18,7 +18,7 @@
   "author": "Giorgio Regni",
   "dependencies": {
     "async": "^3.2.0",
-    "httpagent": "git+https://github.com/scality/httpagent#1.0.2",
+    "httpagent": "github:scality/httpagent#1.0.5",
     "werelogs": "scality/werelogs#8.1.2"
   },
   "devDependencies": {
