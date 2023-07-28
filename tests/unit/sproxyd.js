@@ -306,6 +306,67 @@ const clientImmutableWithFailover = new Sproxy({
                     }
                 });
         });
+
+        it('should be able to put more data to sproxyd using the same socket', done => {
+            const upStream1 = new stream.PassThrough();
+            upStream1.write(upload);
+            upStream1.end();
+        
+            const upStream2 = new stream.PassThrough();
+            upStream2.write(upload);
+            upStream2.end();
+        
+            let savedKey1;
+            let savedKey2;
+        
+            // Making two requests sequentially using the same client
+            client.put(upStream1, upload.length, parameters, reqUid, (err, key) => {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                savedKey1 = key;
+        
+                client.put(upStream2, upload.length, parameters, reqUid, (err, key) => {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+                    savedKey2 = key;
+        
+                    // Get data for the first key and assert that it matches the original upload
+                    client.get(savedKey1, undefined, reqUid, (err, stream) => {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        let ret = Buffer.alloc(0);
+                        stream.on('data', val => {
+                            ret = Buffer.concat([ret, val]);
+                        });
+                        stream.on('end', () => {
+                            assert.deepStrictEqual(ret, upload);
+        
+                            // Get data for the second key and assert that it matches the original upload
+                            client.get(savedKey2, undefined, reqUid, (err, stream) => {
+                                if (err) {
+                                    done(err);
+                                    return;
+                                }
+                                ret = Buffer.alloc(0);
+                                stream.on('data', val => {
+                                    ret = Buffer.concat([ret, val]);
+                                });
+                                stream.on('end', () => {
+                                    assert.deepStrictEqual(ret, upload);
+                                    done();
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
     });
 });
 
