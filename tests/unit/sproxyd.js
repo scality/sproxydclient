@@ -54,6 +54,23 @@ function _batchDelKeys(n) {
     return list;
 }
 
+function checkKeyContent(client, key, body, reqUid, callback) {
+    client.get(key, undefined, reqUid, (err, stream) => {
+        let ret = Buffer.alloc(0);
+        if (err) {
+            done(err);
+        } else {
+            stream.on('data', val => {
+                ret = Buffer.concat([ret, val]);
+            });
+            stream.on('end', () => {
+                assert.deepStrictEqual(ret, body);
+                callback();
+            });
+        }
+    });
+}
+
 function makeResponse(res, code, message, data, md) {
     /* eslint-disable no-param-reassign */
     res.statusCode = code;
@@ -230,20 +247,7 @@ const clientImmutableWithFailover = new Sproxy({
         });
 
         it('should get some data via sproxyd', done => {
-            client.get(savedKey, undefined, reqUid, (err, stream) => {
-                let ret = Buffer.alloc(0);
-                if (err) {
-                    done(err);
-                } else {
-                    stream.on('data', val => {
-                        ret = Buffer.concat([ret, val]);
-                    });
-                    stream.on('end', () => {
-                        assert.deepStrictEqual(ret, upload);
-                        done();
-                    });
-                }
-            });
+            checkKeyContent(client, savedKey, upload, reqUid, done);
         });
 
         it('should delete some data via sproxyd', done => {
@@ -344,35 +348,9 @@ const clientImmutableWithFailover = new Sproxy({
                     next();
                 }),
                 // Get data for the first key and assert that it matches the original upload
-                next => client.get(savedKey1, undefined, reqUid, (err, stream) => {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    let ret = Buffer.alloc(0);
-                    stream.on('data', val => {
-                        ret = Buffer.concat([ret, val]);
-                    });
-                    stream.on('end', () => {
-                        assert.deepStrictEqual(ret, upload);
-                        next();
-                    });
-                }),
+                next => checkKeyContent(client, savedKey1, upload, reqUid, next),
                 // Get data for the second key and assert that it matches the original upload
-                _ => client.get(savedKey2, undefined, reqUid, (err, stream) => {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    ret = Buffer.alloc(0);
-                    stream.on('data', val => {
-                        ret = Buffer.concat([ret, val]);
-                    });
-                    stream.on('end', () => {
-                        assert.deepStrictEqual(ret, upload);
-                        done();
-                    });
-                }),
+                _ => checkKeyContent(client, savedKey2, upload, reqUid, done),
             ]);
         });
     });
