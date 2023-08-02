@@ -307,14 +307,33 @@ const clientImmutableWithFailover = new Sproxy({
             const upStream = new stream.PassThrough();
             upStream.write(upload.slice(0, upload.length - 10));
             setTimeout(() => upStream.destroy(), 500);
-            client.put(upStream, upload.length, parameters, reqUid,
-                err => {
-                    if (err) {
-                        done();
-                    } else {
-                        assert.fail('expected an immediate error from sproxyd');
-                    }
-                });
+            async.series([
+                next => {
+                    client.put(upStream, upload.length, parameters, reqUid,
+                        err => {
+                            if (err) {
+                                next();
+                            } else {
+                                assert.fail('expected an immediate error from sproxyd');
+                            }
+                        });
+                },
+                // Next request should go wel
+                next => {
+                    const upStream = new stream.PassThrough();
+                    upStream.write(upload);
+                    client.put(upStream, upload.length, parameters, reqUid,
+                        (err, key) => {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            savedKey = key;
+                            next();
+                        });
+                },
+                _ => checkKeyContent(client, savedKey, upload, reqUid, done),
+            ]);
         });
 
         it('should be able to put more data to sproxyd using the same socket', done => {
