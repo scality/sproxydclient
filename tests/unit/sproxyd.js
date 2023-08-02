@@ -123,7 +123,8 @@ function handler(req, res) {
             makeResponse(res, 404, 'NoSuchPath');
         }
     } else if (req.method === 'POST') {
-        makeResponse(res, 200);
+        // Consume payload
+        req.resume().on('end', () => makeResponse(res, 200, 'OK'));
     }
 }
 
