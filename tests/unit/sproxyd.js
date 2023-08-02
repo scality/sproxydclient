@@ -68,6 +68,10 @@ function makeResponse(res, code, message, data, md) {
     res.end();
 }
 
+function consumeAndMakeResponse(req, res, code, message, data, md) {
+    req.resume().on('end', () => makeResponse(res, code, message, data, md));
+}
+
 function handler(req, res) {
     const key = req.url.slice(-40);
     if (expectedRequestHeaders) {
@@ -82,12 +86,12 @@ function handler(req, res) {
         });
     }
     if (req.url === '/proxy/arc/.conf' && req.method === 'GET') {
-        makeResponse(res, 200, 'OK');
+        consumeAndMakeResponse(req, res, 200, 'OK');
     } else if (!req.url.startsWith('/proxy/arc')) {
-        makeResponse(res, 404, 'NoSuchPath');
+        consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
     } else if (req.method === 'PUT') {
         if (server[key]) {
-            makeResponse(res, 404, 'AlreadyExists');
+            consumeAndMakeResponse(req, res, 404, 'AlreadyExists');
         } else {
             server[key] = Buffer.alloc(0);
             if (req.headers['x-scal-usermd']) {
@@ -100,31 +104,32 @@ function handler(req, res) {
         }
     } else if (req.method === 'GET') {
         if (!server[key]) {
-            makeResponse(res, 404, 'NoSuchPath');
+            consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
         } else {
-            makeResponse(res, 200, 'OK', server[key]);
+            consumeAndMakeResponse(req, res, 200, 'OK', server[key]);
         }
     } else if (req.method === 'DELETE') {
         if (key === lockedObjectKey) {
-            makeResponse(res, 423, 'Locked');
+            consumeAndMakeResponse(req, res, 423, 'Locked');
         } else if (!server[key]) {
-            makeResponse(res, 404, 'NoSuchPath');
+            consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
         } else {
             delete server[key];
             if (md[key]) {
                 delete md[key];
             }
-            makeResponse(res, 200, 'OK');
+            consumeAndMakeResponse(req, res, 200, 'OK');
         }
     } else if (req.method === 'HEAD') {
         if (server[key]) {
-            makeResponse(res, 200, 'OK', null, md[key]);
+            consumeAndMakeResponse(req, res, 200, 'OK', null, md[key]);
         } else {
-            makeResponse(res, 404, 'NoSuchPath');
+            consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
         }
     } else if (req.method === 'POST') {
-        // Consume payload
-        req.resume().on('end', () => makeResponse(res, 200, 'OK'));
+        consumeAndMakeResponse(req, res, 200, 'OK');
+    } else {
+        throw new Error(`unexpected HTTP method: ${req.method}`);
     }
 }
 
