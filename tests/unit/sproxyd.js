@@ -56,15 +56,16 @@ function _batchDelKeys(n) {
 
 function checkKeyContent(client, key, body, reqUid, callback) {
     client.get(key, undefined, reqUid, (err, stream) => {
-        let ret = Buffer.alloc(0);
+        const chunks = []
         if (err) {
             done(err);
         } else {
             stream.on('data', val => {
-                ret = Buffer.concat([ret, val]);
+                chunks.push(val);
             });
             stream.on('end', () => {
-                assert.deepStrictEqual(ret, body);
+                let buf = Buffer.concat(chunks)
+                assert.deepStrictEqual(buf, body);
                 callback();
             });
         }
