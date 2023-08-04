@@ -319,7 +319,7 @@ const clientImmutableWithFailover = new Sproxy({
                             }
                         });
                 },
-                // Next request should go wel
+                // Next request should go well
                 next => {
                     const upStream = new stream.PassThrough();
                     upStream.write(upload);
