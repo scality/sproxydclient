@@ -58,7 +58,8 @@ function checkKeyContent(client, key, body, reqUid, callback) {
     client.get(key, undefined, reqUid, (err, stream) => {
         const chunks = []
         if (err) {
-            done(err);
+            callback(err);
+            return;
         } else {
             stream.on('data', val => {
                 chunks.push(val);
@@ -326,15 +327,15 @@ const clientImmutableWithFailover = new Sproxy({
                     client.put(upStream, upload.length, parameters, reqUid,
                         (err, key) => {
                             if (err) {
-                                done(err);
+                                next(err);
                                 return;
                             }
                             savedKey = key;
                             next();
                         });
                 },
-                _ => checkKeyContent(client, savedKey, upload, reqUid, done),
-            ]);
+                next => checkKeyContent(client, savedKey, upload, reqUid, next),
+            ], done);
         });
 
         it('should be able to put more data to sproxyd using the same socket', done => {
@@ -353,7 +354,7 @@ const clientImmutableWithFailover = new Sproxy({
             async.series([
                 next => client.put(upStream1, upload.length, parameters, reqUid, (err, key) => {
                     if (err) {
-                        done(err);
+                        next(err);
                         return;
                     }
                     savedKey1 = key;
@@ -361,7 +362,7 @@ const clientImmutableWithFailover = new Sproxy({
                 }),
                 next => client.put(upStream2, upload.length, parameters, reqUid, (err, key) => {
                     if (err) {
-                        done(err);
+                        next(err);
                         return;
                     }
                     savedKey2 = key;
@@ -370,8 +371,8 @@ const clientImmutableWithFailover = new Sproxy({
                 // Get data for the first key and assert that it matches the original upload
                 next => checkKeyContent(client, savedKey1, upload, reqUid, next),
                 // Get data for the second key and assert that it matches the original upload
-                _ => checkKeyContent(client, savedKey2, upload, reqUid, done),
-            ]);
+                next => checkKeyContent(client, savedKey2, upload, reqUid, next),
+            ], done);
         });
     });
 });
