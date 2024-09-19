@@ -1,7 +1,7 @@
 {
   "name": "sproxydclient",
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "version": "8.0.10",
   "description": "sproxyd client",
@@ -17,16 +17,14 @@
   ],
   "author": "Giorgio Regni",
   "dependencies": {
-    "async": "^3.2.0",
-    "httpagent": "github:scality/httpagent#1.0.6",
-    "werelogs": "scality/werelogs#8.1.2"
+    "async": "^3.2.6",
+    "httpagent": "github:scality/httpagent#1.1.0",
+    "werelogs": "scality/werelogs#8.2.0"
   },
   "devDependencies": {
-    "eslint": "^7.32.0",
-    "eslint-config-airbnb": "^18.2.1",
-    "eslint-config-scality": "scality/Guidelines#8.2.0",
-    "eslint-plugin-import": "^2.22.1",
-    "mocha": "^8.4.0"
+    "eslint": "^9.10.0",
+    "eslint-config-scality": "scality/Guidelines#8.3.0",
+    "mocha": "^10.7.3"
   },
   "license": "Apache-2.0",
   "bugs": {
