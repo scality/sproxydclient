@@ -1,8 +1,5 @@
-
-// eslint-disable-line strict
-
 const assert = require('assert');
-const crypto = require('crypto');
+const cryptoLib = require('crypto');
 const http = require('http');
 const stream = require('stream');
 const async = require('async');
@@ -15,7 +12,7 @@ const namespace = 'default';
 const owner = 'glados';
 const parameters = { bucketName, namespace, owner };
 const reqUid = 'REQ1';
-const upload = crypto.randomBytes(9000);
+const upload = cryptoLib.randomBytes(9000);
 let savedKey;
 let server;
 const md = {};
@@ -34,13 +31,13 @@ function clientAssert(bootstrap, sproxydPath) {
 }
 
 function generateMD() {
-    return Buffer.from(crypto.randomBytes(32)).toString('hex');
+    return Buffer.from(cryptoLib.randomBytes(32)).toString('hex');
 }
 
 function generateKey() {
-    const tmp = crypto.createHash('md5').update(crypto.randomBytes(1024)
+    const tmp = cryptoLib.createHash('md5').update(cryptoLib.randomBytes(1024)
         .toString()).digest().slice(0, 10);
-    const tmp2 = crypto.createHash('md5').update(crypto.randomBytes(1024)
+    const tmp2 = cryptoLib.createHash('md5').update(cryptoLib.randomBytes(1024)
         .toString()).digest().slice(0, 10);
     return Buffer.concat([tmp, tmp2]).toString('hex').toUpperCase();
 }
@@ -56,7 +53,7 @@ function _batchDelKeys(n) {
 
 function checkKeyContent(client, key, body, reqUid, callback) {
     client.get(key, undefined, reqUid, (err, stream) => {
-        const chunks = []
+        const chunks = [];
         if (err) {
             callback(err);
             return;
@@ -65,7 +62,7 @@ function checkKeyContent(client, key, body, reqUid, callback) {
                 chunks.push(val);
             });
             stream.on('end', () => {
-                let buf = Buffer.concat(chunks)
+                const buf = Buffer.concat(chunks);
                 assert.deepStrictEqual(buf, body);
                 callback();
             });
@@ -184,7 +181,7 @@ const clientImmutableWithFailover = new Sproxy({
         'Sproxyd client non-immutable',
         clientNonImmutable,
         null,
-       ['x-scal-replica-policy'],
+        ['x-scal-replica-policy'],
         false,
     ],
     [
@@ -201,7 +198,6 @@ const clientImmutableWithFailover = new Sproxy({
         ['x-scal-replica-policy'],
         true
     ],
-
 ].forEach(([msg, client, expectHeader, expectNonHeader, failover]) => {
     describe(msg, function () {
         this.timeout(5000);
@@ -224,9 +220,11 @@ const clientImmutableWithFailover = new Sproxy({
 
         beforeEach(() => {
             // force bootstrap order to failover test
+            // eslint-disable-next-line no-param-reassign
             client.bootstrap = failover
-                ? [ ['127.0.0.1', '9001'], ['127.0.0.1', '9000'] ]
-                : [ ['127.0.0.1', '9000'] ];
+                ? [['127.0.0.1', '9001'], ['127.0.0.1', '9000']]
+                : [['127.0.0.1', '9000']];
+            // eslint-disable-next-line no-param-reassign
             client.current = client.bootstrap[0];
             expectedRequestHeaders = expectHeader;
             notExpectedRequestHeaders = expectNonHeader;
@@ -445,9 +443,8 @@ describe('Sproxyd PUT error handling', function () {
         client.current = client.bootstrap[0];
         async.series([
             next => {
-                serverWithError = http.createServer((req, res) => {
-                    const key = req.url.slice(-40);
-                    req.on('data', data => {
+                serverWithError = http.createServer(req => {
+                    req.on('data', () => {
                         req.destroy();
                     });
                 }).listen(9001);

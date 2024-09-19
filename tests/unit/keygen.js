@@ -1,5 +1,4 @@
-
-// eslint-disable-line strict
+ 
 
 const assert = require('assert');
 
@@ -20,9 +19,7 @@ describe('Key generation', () => {
             assert.strictEqual(key.slice(30, 32), sid);
             assert.strictEqual(key.slice(38, 40), cosAsStr);
             return key.slice(16, 32);
-        }).reduce((prev, current) => { // eslint-disable-line arrow-body-style
-            return prev === current ? current : false;
-        });
+        }).reduce((prev, current) => (prev === current ? current : false));
         assert(result);
     });
 });
