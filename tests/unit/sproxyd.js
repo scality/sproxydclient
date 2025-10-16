@@ -259,7 +259,6 @@ const clientImmutableWithFailover = new Sproxy({
                 const error = new Error();
                 error.isExpected = true;
                 error.code = 404;
-                error.retryable = true;
                 assert.deepStrictEqual(err, error,
                     'Doesn\'t fail properly');
                 done();
