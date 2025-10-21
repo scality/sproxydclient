@@ -278,7 +278,7 @@ const clientImmutableWithFailover = new Sproxy({
         });
 
         it('Should get the md of the object', done => {
-            client.getHEAD(savedKey, reqUid, (err, data) => {
+            client.getUserMetadata(savedKey, reqUid, (err, data) => {
                 assert.strictEqual(err, null);
                 assert.strictEqual(data, mdHex);
                 done();
@@ -286,7 +286,7 @@ const clientImmutableWithFailover = new Sproxy({
         });
 
         it('Get HEAD should return an error', done => {
-            client.getHEAD(generateKey(), reqUid, err => {
+            client.getUserMetadata(generateKey(), reqUid, err => {
                 assert.notStrictEqual(err, null);
                 assert.notStrictEqual(err, undefined);
                 assert.strictEqual(err.code, 404);
