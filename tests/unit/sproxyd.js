@@ -236,14 +236,27 @@ const clientImmutableWithFailover = new Sproxy({
         });
 
         it('should put some data via sproxyd',done => {
+            expectedRequestHeaders = Object.assign({}, expectedRequestHeaders,
+                { 'content-length': upload.length.toString() });
             const upStream = new stream.PassThrough();
             upStream.write(upload);
             upStream.end();
-            client.put(upStream, upload.length, parameters, reqUid,
-                (err, key) => {
-                    savedKey = key;
-                    done(err);
-                });
+            client.put(upStream, upload.length, parameters, reqUid, (err, key) => {
+                savedKey = key;
+                done(err);
+            });
+        });
+
+        it('should put some data via sproxyd without providing a content length', done => {
+            expectedRequestHeaders = Object.assign({}, expectedRequestHeaders,
+                { 'transfer-encoding': 'chunked' });
+            const upStream = new stream.PassThrough();
+            upStream.write(upload);
+            upStream.end();
+            client.put(upStream, null, parameters, reqUid, (err, key) => {
+                savedKey = key;
+                done(err);
+            });
         });
 
         it('should get some data via sproxyd', done => {
