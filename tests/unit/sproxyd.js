@@ -16,6 +16,7 @@ const upload = cryptoLib.randomBytes(9000);
 let savedKey;
 let server;
 const md = {};
+const versions = {};
 let mdHex;
 let expectedRequestHeaders;
 let notExpectedRequestHeaders;
@@ -70,7 +71,7 @@ function checkKeyContent(client, key, body, reqUid, callback) {
     });
 }
 
-function makeResponse(res, code, message, data, md) {
+function makeResponse(res, code, message, data, md, version) {
     /* eslint-disable no-param-reassign */
     res.statusCode = code;
     res.statusMessage = message;
@@ -81,6 +82,9 @@ function makeResponse(res, code, message, data, md) {
     if (md) {
         res.setHeader('x-scal-usermd', md);
     }
+    if (version !== undefined) {
+        res.setHeader('x-scal-version', version.toString());
+    }
     res.end();
 }
 
@@ -89,7 +93,9 @@ function consumeAndMakeResponse(req, res, code, message, data, md) {
 }
 
 function handler(req, res) {
-    const key = req.url.slice(-40);
+    const [urlPath, queryString] = req.url.split('?');
+    const key = urlPath.slice(-40);
+    const query = new URLSearchParams(queryString || '');
     if (expectedRequestHeaders) {
         Object.keys(expectedRequestHeaders).forEach(header => {
             assert.strictEqual(req.headers[header],
@@ -103,21 +109,38 @@ function handler(req, res) {
     }
     if (req.url === '/proxy/arc/.conf' && req.method === 'GET') {
         consumeAndMakeResponse(req, res, 200, 'OK');
-    } else if (!req.url.startsWith('/proxy/arc')) {
+    } else if (!urlPath.startsWith('/proxy/arc')) {
         consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
     } else if (req.method === 'PUT') {
-        if (server[key]) {
-            consumeAndMakeResponse(req, res, 404, 'AlreadyExists');
-        } else {
-            server[key] = Buffer.alloc(0);
-            if (req.headers['x-scal-usermd']) {
-                md[key] = req.headers['x-scal-usermd'];
+        const versionParam = query.get('version');
+        if (versionParam !== null) {
+            // conditional PUT: 422 if key absent, 412 if version mismatch
+            if (server[key] === undefined) {
+                consumeAndMakeResponse(req, res, 422, 'UnprocessableEntity');
+                return;
             }
-            req.on('data', data => {
-                server[key] = Buffer.concat([server[key], data]);
-            })
-                .on('end', () => makeResponse(res, 200, 'OK'));
+            const expectedVersion = parseInt(versionParam, 10);
+            if (versions[key] !== expectedVersion) {
+                consumeAndMakeResponse(req, res, 412, 'PreconditionFailed');
+                return;
+            }
+        } else if (req.headers['if-none-match'] === '*') {
+            // fresh create: only succeed if key does not exist
+            if (server[key] !== undefined) {
+                consumeAndMakeResponse(req, res, 412, 'PreconditionFailed');
+                return;
+            }
         }
+        server[key] = Buffer.alloc(0);
+        if (req.headers['x-scal-usermd']) {
+            md[key] = req.headers['x-scal-usermd'];
+        }
+        versions[key] = (versions[key] || 0) + 64;
+        req.on('data', data => {
+            server[key] = Buffer.concat([server[key], data]);
+        })
+            .on('end', () => makeResponse(res, 200, 'OK', null, null,
+                versions[key]));
     } else if (req.method === 'GET') {
         if (!server[key]) {
             consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
@@ -127,18 +150,31 @@ function handler(req, res) {
     } else if (req.method === 'DELETE') {
         if (key === lockedObjectKey) {
             consumeAndMakeResponse(req, res, 423, 'Locked');
+            return;
+        }
+        const deleteVersionParam = query.get('version');
+        if (deleteVersionParam !== null) {
+            if (server[key] === undefined) {
+                consumeAndMakeResponse(req, res, 422, 'UnprocessableEntity');
+                return;
+            }
+            const expectedVersion = parseInt(deleteVersionParam, 10);
+            if (versions[key] !== expectedVersion) {
+                consumeAndMakeResponse(req, res, 412, 'PreconditionFailed');
+                return;
+            }
         } else if (!server[key]) {
             consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
-        } else {
-            delete server[key];
-            if (md[key]) {
-                delete md[key];
-            }
-            consumeAndMakeResponse(req, res, 200, 'OK');
+            return;
         }
+        delete server[key];
+        delete md[key];
+        delete versions[key];
+        consumeAndMakeResponse(req, res, 200, 'OK');
     } else if (req.method === 'HEAD') {
         if (server[key]) {
-            consumeAndMakeResponse(req, res, 200, 'OK', null, md[key]);
+            req.resume().on('end', () =>
+                makeResponse(res, 200, 'OK', null, md[key], versions[key]));
         } else {
             consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
         }
@@ -272,8 +308,10 @@ const clientImmutableWithFailover = new Sproxy({
         it('should put an empty object via sproxyd', done => {
             savedKey = generateKey();
             mdHex = generateMD();
-            client.putEmptyObject(savedKey, mdHex, reqUid, err => {
-                done(err);
+            client.putEmptyObject(savedKey, mdHex, {}, reqUid, (err, version) => {
+                assert.strictEqual(err, null);
+                assert(version, 'expected version from putEmptyObject');
+                done();
             });
         });
 
@@ -298,6 +336,106 @@ const clientImmutableWithFailover = new Sproxy({
             const list = _batchDelKeys(2000);
             client.batchDelete(list, reqUid, err => {
                 assert.strictEqual(err, null);
+                done();
+            });
+        });
+
+        it('should put an empty object with If-None-Match on a fresh key', done => {
+            const key = generateKey();
+            const meta = generateMD();
+            client.putEmptyObject(key, meta, {
+                headers: { 'If-None-Match': '*' },
+            }, reqUid, err => {
+                done(err);
+            });
+        });
+
+        it('should fail put with If-None-Match when key already exists', done => {
+            const key = generateKey();
+            const meta = generateMD();
+            async.series([
+                next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                next => client.putEmptyObject(key, meta, {
+                    headers: { 'If-None-Match': '*' },
+                }, reqUid, err => {
+                    assert(err, 'expected error for duplicate key with If-None-Match');
+                    assert.strictEqual(err.code, 412);
+                    next();
+                }),
+            ], done);
+        });
+
+        it('should succeed conditional PUT with matching version', done => {
+            const key = generateKey();
+            const meta = generateMD();
+            const meta2 = generateMD();
+            async.waterfall([
+                next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                (version, next) => {
+                    assert(version, 'expected version from putEmptyObject');
+                    client.putEmptyObject(key, meta2, {
+                        query: { version },
+                    }, reqUid, next);
+                },
+            ], done);
+        });
+
+        it('should fail conditional PUT with wrong version', done => {
+            const key = generateKey();
+            const meta = generateMD();
+            async.series([
+                next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                next => client.putEmptyObject(key, meta, {
+                    query: { version: 0 },
+                }, reqUid, err => {
+                    assert(err, 'expected error for wrong version');
+                    assert.strictEqual(err.code, 412);
+                    next();
+                }),
+            ], done);
+        });
+
+        it('should return 422 for conditional PUT on non-existent key', done => {
+            const key = generateKey();
+            const meta = generateMD();
+            client.putEmptyObject(key, meta, {
+                query: { version: 64 },
+            }, reqUid, err => {
+                assert(err, 'expected error for version on missing key');
+                assert.strictEqual(err.code, 422);
+                done();
+            });
+        });
+
+        it('should delete an object conditionally via deleteWithParams', done => {
+            const key = generateKey();
+            const meta = generateMD();
+            async.waterfall([
+                next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                (version, next) => client.deleteWithParams(key,
+                    { query: { version } }, reqUid, next),
+            ], done);
+        });
+
+        it('should fail deleteWithParams with wrong version', done => {
+            const key = generateKey();
+            const meta = generateMD();
+            async.series([
+                next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                next => client.deleteWithParams(key,
+                    { query: { version: 0 } }, reqUid, err => {
+                        assert(err, 'expected error for wrong version');
+                        assert.strictEqual(err.code, 412);
+                        next();
+                    }),
+            ], done);
+        });
+
+        it('should return 422 for deleteWithParams on non-existent key', done => {
+            const key = generateKey();
+            client.deleteWithParams(key, { query: { version: 64 } }, reqUid, err => {
+                assert(err, 'expected error for version on missing key');
+                assert.strictEqual(err.code, 422);
                 done();
             });
         });
