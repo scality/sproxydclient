@@ -131,16 +131,25 @@ function handler(req, res) {
                 return;
             }
         }
-        server[key] = Buffer.alloc(0);
-        if (req.headers['x-scal-usermd']) {
-            md[key] = req.headers['x-scal-usermd'];
-        }
-        versions[key] = (versions[key] || 0) + 64;
-        req.on('data', data => {
-            server[key] = Buffer.concat([server[key], data]);
-        })
-            .on('end', () => makeResponse(res, 200, 'OK', null, null,
+        if (req.headers['x-scal-cmd'] === 'update-usermd') {
+            if (req.headers['x-scal-usermd']) {
+                md[key] = req.headers['x-scal-usermd'];
+            }
+            versions[key] = (versions[key] || 0) + 64;
+            req.resume().on('end', () => makeResponse(res, 200, 'OK', null, null,
                 versions[key]));
+        } else {
+            server[key] = Buffer.alloc(0);
+            if (req.headers['x-scal-usermd']) {
+                md[key] = req.headers['x-scal-usermd'];
+            }
+            versions[key] = (versions[key] || 0) + 64;
+            req.on('data', data => {
+                server[key] = Buffer.concat([server[key], data]);
+            })
+                .on('end', () => makeResponse(res, 200, 'OK', null, null,
+                    versions[key]));
+        }
     } else if (req.method === 'GET') {
         if (!server[key]) {
             consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
@@ -321,6 +330,45 @@ const clientImmutableWithFailover = new Sproxy({
                 assert.strictEqual(data, mdHex);
                 done();
             });
+        });
+
+        it('should update user metadata via putUserMetadata without altering content', done => {
+            const newMd = generateMD();
+            let testKey;
+            let initialVersion;
+            const upStream = new stream.PassThrough();
+            upStream.write(upload);
+            upStream.end();
+            async.series([
+                next => client.put(upStream, upload.length, parameters, reqUid,
+                    (err, key, version) => {
+                        testKey = key;
+                        initialVersion = version;
+                        next(err);
+                    }),
+                next => client.putUserMetadata(testKey, newMd,
+                    { query: { version: initialVersion } }, reqUid, next),
+                next => client.getUserMetadata(testKey, reqUid, (err, data) => {
+                    assert.strictEqual(data, newMd);
+                    next(err);
+                }),
+                next => checkKeyContent(client, testKey, upload, reqUid, next),
+            ], done);
+        });
+
+        it('should fail putUserMetadata with wrong version', done => {
+            const upStream = new stream.PassThrough();
+            upStream.write(upload);
+            upStream.end();
+            async.waterfall([
+                next => client.put(upStream, upload.length, parameters, reqUid, next),
+                (key, version, next) => client.putUserMetadata(key, generateMD(),
+                    { query: { version: 0 } }, reqUid, err => {
+                        assert(err, 'expected error for wrong version');
+                        assert.strictEqual(err.code, 412);
+                        next();
+                    }),
+            ], done);
         });
 
         it('Get HEAD should return an error', done => {
