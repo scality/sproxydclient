@@ -374,6 +374,38 @@ const clientImmutableWithFailover = new Sproxy({
     });
 });
 
+describe('Sproxyd constructor chordCos', () => {
+    it('should default to cos 2 when chordCos is absent', () => {
+        const c = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
+        assert.strictEqual(c.cos, 0x2);
+    });
+
+    it('should default to cos 2 when chordCos is undefined', () => {
+        const c = new Sproxy({ bootstrap: ['127.0.0.1:9000'], chordCos: undefined });
+        assert.strictEqual(c.cos, 0x2);
+    });
+
+    it('should default to cos 2 when chordCos is null', () => {
+        const c = new Sproxy({ bootstrap: ['127.0.0.1:9000'], chordCos: null });
+        assert.strictEqual(c.cos, 0x2);
+    });
+
+    it('should set cos 0 when chordCos is 0', () => {
+        const c = new Sproxy({ bootstrap: ['127.0.0.1:9000'], chordCos: 0 });
+        assert.strictEqual(c.cos, 0);
+    });
+
+    it('should set cos 0 when chordCos is "0"', () => {
+        const c = new Sproxy({ bootstrap: ['127.0.0.1:9000'], chordCos: '0' });
+        assert.strictEqual(c.cos, '0');
+    });
+
+    it('should set cos when chordCos is a non-zero integer', () => {
+        const c = new Sproxy({ bootstrap: ['127.0.0.1:9000'], chordCos: 3 });
+        assert.strictEqual(c.cos, 3);
+    });
+});
+
 describe('Sproxyd client', () => {
     const client = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
     clientAssert(client.bootstrap, client.path);
