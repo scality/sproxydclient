@@ -390,12 +390,12 @@ describe('Sproxyd constructor chordCos', () => {
         assert.strictEqual(c.cos, 0x2);
     });
 
-    it('should set cos 0 when chordCos is 0', () => {
+    it('should set cos 0 when chordCos is 0 (integer)', () => {
         const c = new Sproxy({ bootstrap: ['127.0.0.1:9000'], chordCos: 0 });
         assert.strictEqual(c.cos, 0);
     });
 
-    it('should set cos 0 when chordCos is "0"', () => {
+    it('should set cos "0" when chordCos is "0" (string)', () => {
         const c = new Sproxy({ bootstrap: ['127.0.0.1:9000'], chordCos: '0' });
         assert.strictEqual(c.cos, '0');
     });
