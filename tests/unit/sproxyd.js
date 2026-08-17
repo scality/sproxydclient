@@ -127,14 +127,14 @@ function handler(req, res) {
     } else if (req.method === 'DELETE') {
         if (key === lockedObjectKey) {
             consumeAndMakeResponse(req, res, 423, 'Locked');
-        } else if (!server[key]) {
-            consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
         } else {
+            // sproxyd deletes are idempotent: they answer 204 whether or not
+            // the key was there
             delete server[key];
             if (md[key]) {
                 delete md[key];
             }
-            consumeAndMakeResponse(req, res, 200, 'OK');
+            consumeAndMakeResponse(req, res, 204, 'No Content');
         }
     } else if (req.method === 'HEAD') {
         if (server[key]) {
@@ -143,7 +143,8 @@ function handler(req, res) {
             consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
         }
     } else if (req.method === 'POST') {
-        consumeAndMakeResponse(req, res, 200, 'OK');
+        // sproxyd answers 204 on POST .batch_delete
+        consumeAndMakeResponse(req, res, 204, 'No Content');
     } else {
         throw new Error(`unexpected HTTP method: ${req.method}`);
     }
