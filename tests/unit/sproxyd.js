@@ -172,14 +172,13 @@ function handler(req, res) {
                 consumeAndMakeResponse(req, res, 412, 'PreconditionFailed');
                 return;
             }
-        } else if (!server[key]) {
-            consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
-            return;
         }
+        // sproxyd deletes are idempotent: they answer 204 whether or not
+        // the key was there
         delete server[key];
         delete md[key];
         delete versions[key];
-        consumeAndMakeResponse(req, res, 200, 'OK');
+        consumeAndMakeResponse(req, res, 204, 'No Content');
     } else if (req.method === 'HEAD') {
         if (server[key]) {
             req.resume().on('end', () =>
@@ -188,7 +187,8 @@ function handler(req, res) {
             consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
         }
     } else if (req.method === 'POST') {
-        consumeAndMakeResponse(req, res, 200, 'OK');
+        // sproxyd answers 204 on POST .batch_delete
+        consumeAndMakeResponse(req, res, 204, 'No Content');
     } else {
         throw new Error(`unexpected HTTP method: ${req.method}`);
     }
