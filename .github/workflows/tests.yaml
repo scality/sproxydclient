@@ -24,6 +24,8 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: lint javascript
         run: yarn --silent lint -- --max-warnings 0
+      - name: lint markdown
+        run: yarn --silent lint_md
       - name: check formatting
         run: yarn --silent prettier:check
       - name: run tests
