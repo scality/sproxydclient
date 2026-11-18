@@ -36,10 +36,8 @@ function generateMD() {
 }
 
 function generateKey() {
-    const tmp = cryptoLib.createHash('md5').update(cryptoLib.randomBytes(1024)
-        .toString()).digest().slice(0, 10);
-    const tmp2 = cryptoLib.createHash('md5').update(cryptoLib.randomBytes(1024)
-        .toString()).digest().slice(0, 10);
+    const tmp = cryptoLib.createHash('md5').update(cryptoLib.randomBytes(1024).toString()).digest().slice(0, 10);
+    const tmp2 = cryptoLib.createHash('md5').update(cryptoLib.randomBytes(1024).toString()).digest().slice(0, 10);
     return Buffer.concat([tmp, tmp2]).toString('hex').toUpperCase();
 }
 
@@ -98,8 +96,7 @@ function handler(req, res) {
     const query = new URLSearchParams(queryString || '');
     if (expectedRequestHeaders) {
         Object.keys(expectedRequestHeaders).forEach(header => {
-            assert.strictEqual(req.headers[header],
-                expectedRequestHeaders[header]);
+            assert.strictEqual(req.headers[header], expectedRequestHeaders[header]);
         });
     }
     if (notExpectedRequestHeaders) {
@@ -136,8 +133,7 @@ function handler(req, res) {
                 md[key] = req.headers['x-scal-usermd'];
             }
             versions[key] = (versions[key] || 0) + 64;
-            req.resume().on('end', () => makeResponse(res, 200, 'OK', null, null,
-                versions[key]));
+            req.resume().on('end', () => makeResponse(res, 200, 'OK', null, null, versions[key]));
         } else {
             server[key] = Buffer.alloc(0);
             if (req.headers['x-scal-usermd']) {
@@ -146,9 +142,7 @@ function handler(req, res) {
             versions[key] = (versions[key] || 0) + 64;
             req.on('data', data => {
                 server[key] = Buffer.concat([server[key], data]);
-            })
-                .on('end', () => makeResponse(res, 200, 'OK', null, null,
-                    versions[key]));
+            }).on('end', () => makeResponse(res, 200, 'OK', null, null, versions[key]));
         }
     } else if (req.method === 'GET') {
         if (!server[key]) {
@@ -181,8 +175,7 @@ function handler(req, res) {
         consumeAndMakeResponse(req, res, 204, 'No Content');
     } else if (req.method === 'HEAD') {
         if (server[key]) {
-            req.resume().on('end', () =>
-                makeResponse(res, 200, 'OK', null, md[key], versions[key]));
+            req.resume().on('end', () => makeResponse(res, 200, 'OK', null, md[key], versions[key]));
         } else {
             consumeAndMakeResponse(req, res, 404, 'NoSuchPath');
         }
@@ -201,7 +194,7 @@ const clientNonImmutable = new Sproxy({ bootstrap: ['127.0.0.1:9000'] });
 clientAssert(clientNonImmutable.bootstrap, clientNonImmutable.path);
 
 const clientNonImmutableWithFailover = new Sproxy({
-    bootstrap: ['127.0.0.1:9001', '127.0.0.1:9000']
+    bootstrap: ['127.0.0.1:9001', '127.0.0.1:9000'],
 });
 
 const clientImmutable = new Sproxy({
@@ -215,20 +208,8 @@ const clientImmutableWithFailover = new Sproxy({
 });
 
 [
-    [
-        'Sproxyd client immutable',
-        clientImmutable,
-        { 'x-scal-replica-policy': 'immutable' },
-        null,
-        false,
-    ],
-    [
-        'Sproxyd client non-immutable',
-        clientNonImmutable,
-        null,
-        ['x-scal-replica-policy'],
-        false,
-    ],
+    ['Sproxyd client immutable', clientImmutable, { 'x-scal-replica-policy': 'immutable' }, null, false],
+    ['Sproxyd client non-immutable', clientNonImmutable, null, ['x-scal-replica-policy'], false],
     [
         'Sproxyd client immutable with failover',
         clientImmutableWithFailover,
@@ -236,13 +217,7 @@ const clientImmutableWithFailover = new Sproxy({
         null,
         true,
     ],
-    [
-        'Sproxyd client immutable with failover',
-        clientNonImmutableWithFailover,
-        null,
-        ['x-scal-replica-policy'],
-        true
-    ],
+    ['Sproxyd client immutable with failover', clientNonImmutableWithFailover, null, ['x-scal-replica-policy'], true],
 ].forEach(([msg, client, expectHeader, expectNonHeader, failover]) => {
     describe(msg, function () {
         this.timeout(5000);
@@ -267,7 +242,10 @@ const clientImmutableWithFailover = new Sproxy({
             // force bootstrap order to failover test
             // eslint-disable-next-line no-param-reassign
             client.bootstrap = failover
-                ? [['127.0.0.1', '9001'], ['127.0.0.1', '9000']]
+                ? [
+                      ['127.0.0.1', '9001'],
+                      ['127.0.0.1', '9000'],
+                  ]
                 : [['127.0.0.1', '9000']];
             // eslint-disable-next-line no-param-reassign
             client.current = client.bootstrap[0];
@@ -280,15 +258,14 @@ const clientImmutableWithFailover = new Sproxy({
             notExpectedRequestHeaders = undefined;
         });
 
-        it('should put some data via sproxyd',done => {
+        it('should put some data via sproxyd', done => {
             const upStream = new stream.PassThrough();
             upStream.write(upload);
             upStream.end();
-            client.put(upStream, upload.length, parameters, reqUid,
-                (err, key) => {
-                    savedKey = key;
-                    done(err);
-                });
+            client.put(upStream, upload.length, parameters, reqUid, (err, key) => {
+                savedKey = key;
+                done(err);
+            });
         });
 
         it('should get some data via sproxyd', done => {
@@ -304,8 +281,7 @@ const clientImmutableWithFailover = new Sproxy({
                 const error = new Error();
                 error.isExpected = true;
                 error.code = 404;
-                assert.deepStrictEqual(err, error,
-                    'Doesn\'t fail properly');
+                assert.deepStrictEqual(err, error, "Doesn't fail properly");
                 done();
             });
         });
@@ -339,36 +315,43 @@ const clientImmutableWithFailover = new Sproxy({
             const upStream = new stream.PassThrough();
             upStream.write(upload);
             upStream.end();
-            async.series([
-                next => client.put(upStream, upload.length, parameters, reqUid,
-                    (err, key, version) => {
-                        testKey = key;
-                        initialVersion = version;
-                        next(err);
-                    }),
-                next => client.putUserMetadata(testKey, newMd,
-                    { query: { version: initialVersion } }, reqUid, next),
-                next => client.getUserMetadata(testKey, reqUid, (err, data) => {
-                    assert.strictEqual(data, newMd);
-                    next(err);
-                }),
-                next => checkKeyContent(client, testKey, upload, reqUid, next),
-            ], done);
+            async.series(
+                [
+                    next =>
+                        client.put(upStream, upload.length, parameters, reqUid, (err, key, version) => {
+                            testKey = key;
+                            initialVersion = version;
+                            next(err);
+                        }),
+                    next =>
+                        client.putUserMetadata(testKey, newMd, { query: { version: initialVersion } }, reqUid, next),
+                    next =>
+                        client.getUserMetadata(testKey, reqUid, (err, data) => {
+                            assert.strictEqual(data, newMd);
+                            next(err);
+                        }),
+                    next => checkKeyContent(client, testKey, upload, reqUid, next),
+                ],
+                done,
+            );
         });
 
         it('should fail putUserMetadata with wrong version', done => {
             const upStream = new stream.PassThrough();
             upStream.write(upload);
             upStream.end();
-            async.waterfall([
-                next => client.put(upStream, upload.length, parameters, reqUid, next),
-                (key, version, next) => client.putUserMetadata(key, generateMD(),
-                    { query: { version: 0 } }, reqUid, err => {
-                        assert(err, 'expected error for wrong version');
-                        assert.strictEqual(err.code, 412);
-                        next();
-                    }),
-            ], done);
+            async.waterfall(
+                [
+                    next => client.put(upStream, upload.length, parameters, reqUid, next),
+                    (key, version, next) =>
+                        client.putUserMetadata(key, generateMD(), { query: { version: 0 } }, reqUid, err => {
+                            assert(err, 'expected error for wrong version');
+                            assert.strictEqual(err.code, 412);
+                            next();
+                        }),
+                ],
+                done,
+            );
         });
 
         it('Get HEAD should return an error', done => {
@@ -391,92 +374,138 @@ const clientImmutableWithFailover = new Sproxy({
         it('should put an empty object with If-None-Match on a fresh key', done => {
             const key = generateKey();
             const meta = generateMD();
-            client.putEmptyObject(key, meta, {
-                headers: { 'If-None-Match': '*' },
-            }, reqUid, err => {
-                done(err);
-            });
+            client.putEmptyObject(
+                key,
+                meta,
+                {
+                    headers: { 'If-None-Match': '*' },
+                },
+                reqUid,
+                err => {
+                    done(err);
+                },
+            );
         });
 
         it('should fail put with If-None-Match when key already exists', done => {
             const key = generateKey();
             const meta = generateMD();
-            async.series([
-                next => client.putEmptyObject(key, meta, {}, reqUid, next),
-                next => client.putEmptyObject(key, meta, {
-                    headers: { 'If-None-Match': '*' },
-                }, reqUid, err => {
-                    assert(err, 'expected error for duplicate key with If-None-Match');
-                    assert.strictEqual(err.code, 412);
-                    next();
-                }),
-            ], done);
+            async.series(
+                [
+                    next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                    next =>
+                        client.putEmptyObject(
+                            key,
+                            meta,
+                            {
+                                headers: { 'If-None-Match': '*' },
+                            },
+                            reqUid,
+                            err => {
+                                assert(err, 'expected error for duplicate key with If-None-Match');
+                                assert.strictEqual(err.code, 412);
+                                next();
+                            },
+                        ),
+                ],
+                done,
+            );
         });
 
         it('should succeed conditional PUT with matching version', done => {
             const key = generateKey();
             const meta = generateMD();
             const meta2 = generateMD();
-            async.waterfall([
-                next => client.putEmptyObject(key, meta, {}, reqUid, next),
-                (version, next) => {
-                    assert(version, 'expected version from putEmptyObject');
-                    client.putEmptyObject(key, meta2, {
-                        query: { version },
-                    }, reqUid, next);
-                },
-            ], done);
+            async.waterfall(
+                [
+                    next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                    (version, next) => {
+                        assert(version, 'expected version from putEmptyObject');
+                        client.putEmptyObject(
+                            key,
+                            meta2,
+                            {
+                                query: { version },
+                            },
+                            reqUid,
+                            next,
+                        );
+                    },
+                ],
+                done,
+            );
         });
 
         it('should fail conditional PUT with wrong version', done => {
             const key = generateKey();
             const meta = generateMD();
-            async.series([
-                next => client.putEmptyObject(key, meta, {}, reqUid, next),
-                next => client.putEmptyObject(key, meta, {
-                    query: { version: 0 },
-                }, reqUid, err => {
-                    assert(err, 'expected error for wrong version');
-                    assert.strictEqual(err.code, 412);
-                    next();
-                }),
-            ], done);
+            async.series(
+                [
+                    next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                    next =>
+                        client.putEmptyObject(
+                            key,
+                            meta,
+                            {
+                                query: { version: 0 },
+                            },
+                            reqUid,
+                            err => {
+                                assert(err, 'expected error for wrong version');
+                                assert.strictEqual(err.code, 412);
+                                next();
+                            },
+                        ),
+                ],
+                done,
+            );
         });
 
         it('should return 422 for conditional PUT on non-existent key', done => {
             const key = generateKey();
             const meta = generateMD();
-            client.putEmptyObject(key, meta, {
-                query: { version: 64 },
-            }, reqUid, err => {
-                assert(err, 'expected error for version on missing key');
-                assert.strictEqual(err.code, 422);
-                done();
-            });
+            client.putEmptyObject(
+                key,
+                meta,
+                {
+                    query: { version: 64 },
+                },
+                reqUid,
+                err => {
+                    assert(err, 'expected error for version on missing key');
+                    assert.strictEqual(err.code, 422);
+                    done();
+                },
+            );
         });
 
         it('should delete an object conditionally via deleteWithParams', done => {
             const key = generateKey();
             const meta = generateMD();
-            async.waterfall([
-                next => client.putEmptyObject(key, meta, {}, reqUid, next),
-                (version, next) => client.deleteWithParams(key,
-                    { query: { version } }, reqUid, next),
-            ], done);
+            async.waterfall(
+                [
+                    next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                    (version, next) => client.deleteWithParams(key, { query: { version } }, reqUid, next),
+                ],
+                done,
+            );
         });
 
         it('should fail deleteWithParams with wrong version', done => {
             const key = generateKey();
             const meta = generateMD();
-            async.series([
-                next => client.putEmptyObject(key, meta, {}, reqUid, next),
-                next => client.deleteWithParams(key,
-                    { query: { version: 0 } }, reqUid, err => {
-                        assert(err, 'expected error for wrong version');
-                        assert.strictEqual(err.code, 412);
-                        next();
-                    }),
-            ], done);
+            async.series(
+                [
+                    next => client.putEmptyObject(key, meta, {}, reqUid, next),
+                    next =>
+                        client.deleteWithParams(key, { query: { version: 0 } }, reqUid, err => {
+                            assert(err, 'expected error for wrong version');
+                            assert.strictEqual(err.code, 412);
+                            next();
+                        }),
+                ],
+                done,
+            );
         });
 
         it('should return 422 for deleteWithParams on non-existent key', done => {
@@ -492,23 +521,22 @@ const clientImmutableWithFailover = new Sproxy({
             const upStream = new stream.PassThrough();
             upStream.write(upload.slice(0, upload.length - 10));
             setTimeout(() => upStream.destroy(), 500);
-            async.series([
-                next => {
-                    client.put(upStream, upload.length, parameters, reqUid,
-                        err => {
+            async.series(
+                [
+                    next => {
+                        client.put(upStream, upload.length, parameters, reqUid, err => {
                             if (err) {
                                 next();
                             } else {
                                 assert.fail('expected an immediate error from sproxyd');
                             }
                         });
-                },
-                // Next request should go well
-                next => {
-                    const upStream = new stream.PassThrough();
-                    upStream.write(upload);
-                    client.put(upStream, upload.length, parameters, reqUid,
-                        (err, key) => {
+                    },
+                    // Next request should go well
+                    next => {
+                        const upStream = new stream.PassThrough();
+                        upStream.write(upload);
+                        client.put(upStream, upload.length, parameters, reqUid, (err, key) => {
                             if (err) {
                                 next(err);
                                 return;
@@ -516,9 +544,11 @@ const clientImmutableWithFailover = new Sproxy({
                             savedKey = key;
                             next();
                         });
-                },
-                next => checkKeyContent(client, savedKey, upload, reqUid, next),
-            ], done);
+                    },
+                    next => checkKeyContent(client, savedKey, upload, reqUid, next),
+                ],
+                done,
+            );
         });
 
         it('should be able to put more data to sproxyd using the same socket', done => {
@@ -534,28 +564,33 @@ const clientImmutableWithFailover = new Sproxy({
             let savedKey2;
 
             // Making two requests sequentially using the same client
-            async.series([
-                next => client.put(upStream1, upload.length, parameters, reqUid, (err, key) => {
-                    if (err) {
-                        next(err);
-                        return;
-                    }
-                    savedKey1 = key;
-                    next();
-                }),
-                next => client.put(upStream2, upload.length, parameters, reqUid, (err, key) => {
-                    if (err) {
-                        next(err);
-                        return;
-                    }
-                    savedKey2 = key;
-                    next();
-                }),
-                // Get data for the first key and assert that it matches the original upload
-                next => checkKeyContent(client, savedKey1, upload, reqUid, next),
-                // Get data for the second key and assert that it matches the original upload
-                next => checkKeyContent(client, savedKey2, upload, reqUid, next),
-            ], done);
+            async.series(
+                [
+                    next =>
+                        client.put(upStream1, upload.length, parameters, reqUid, (err, key) => {
+                            if (err) {
+                                next(err);
+                                return;
+                            }
+                            savedKey1 = key;
+                            next();
+                        }),
+                    next =>
+                        client.put(upStream2, upload.length, parameters, reqUid, (err, key) => {
+                            if (err) {
+                                next(err);
+                                return;
+                            }
+                            savedKey2 = key;
+                            next();
+                        }),
+                    // Get data for the first key and assert that it matches the original upload
+                    next => checkKeyContent(client, savedKey1, upload, reqUid, next),
+                    // Get data for the second key and assert that it matches the original upload
+                    next => checkKeyContent(client, savedKey2, upload, reqUid, next),
+                ],
+                done,
+            );
         });
     });
 });
@@ -647,7 +682,7 @@ describe('Sproxyd PUT error handling', function () {
     this.timeout(10000);
 
     const client = new Sproxy({
-        bootstrap: ['127.0.0.1:9001', '127.0.0.1:9000']
+        bootstrap: ['127.0.0.1:9001', '127.0.0.1:9000'],
     });
     let serverWithError;
     let server;
@@ -658,51 +693,51 @@ describe('Sproxyd PUT error handling', function () {
             ['127.0.0.1', '9000'],
         ];
         client.current = client.bootstrap[0];
-        async.series([
-            next => {
-                serverWithError = http.createServer(req => {
-                    req.on('data', () => {
-                        req.destroy();
+        async.series(
+            [
+                next => {
+                    serverWithError = http
+                        .createServer(req => {
+                            req.on('data', () => {
+                                req.destroy();
+                            });
+                        })
+                        .listen(9001);
+                    serverWithError.on('listening', () => {
+                        next();
                     });
-                }).listen(9001);
-                serverWithError.on('listening', () => {
-                    next();
-                });
-                serverWithError.on('error', err => {
-                    process.stdout.write(`${err.stack}\n`);
-                    process.exit(1);
-                });
-            },
-            next => {
-                server = http.createServer(handler).listen(9000);
-                server.on('listening', () => {
-                    next();
-                });
-                server.on('error', err => {
-                    process.stdout.write(`${err.stack}\n`);
-                    process.exit(1);
-                });
-            },
-        ], done);
-
+                    serverWithError.on('error', err => {
+                        process.stdout.write(`${err.stack}\n`);
+                        process.exit(1);
+                    });
+                },
+                next => {
+                    server = http.createServer(handler).listen(9000);
+                    server.on('listening', () => {
+                        next();
+                    });
+                    server.on('error', err => {
+                        process.stdout.write(`${err.stack}\n`);
+                        process.exit(1);
+                    });
+                },
+            ],
+            done,
+        );
     });
 
     after('Shutdown the server', done => {
         client.destroy();
-        async.series([
-            next => serverWithError.close(next),
-            next => server.close(next),
-        ], done);
+        async.series([next => serverWithError.close(next), next => server.close(next)], done);
     });
 
-    it('should not failover for inflight PUT request',done => {
+    it('should not failover for inflight PUT request', done => {
         const upStream = new stream.PassThrough();
         upStream.write(upload);
-        client.put(upStream, upload.length, parameters, reqUid,
-            err => {
-                assert(err);
-                assert.strictEqual(err.retryable, false);
-                done();
-            });
+        client.put(upStream, upload.length, parameters, reqUid, err => {
+            assert(err);
+            assert.strictEqual(err.retryable, false);
+            done();
+        });
     });
 });
