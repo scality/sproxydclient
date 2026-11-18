@@ -8,6 +8,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint $(git ls-files '*.js')",
+    "prettier:check": "prettier --check .",
     "test": "mocha tests/unit"
   },
   "repository": "scality/sproxyd",
@@ -25,7 +26,8 @@
     "@scality/eslint-config-scality": "scality/Guidelines#8.4.0",
     "eslint": "^9.39.5",
     "eslint-plugin-mocha": "^11.3.0",
-    "mocha": "^12.0.2"
+    "mocha": "^12.0.2",
+    "prettier": "^3.10.1"
   },
   "license": "Apache-2.0",
   "bugs": {
