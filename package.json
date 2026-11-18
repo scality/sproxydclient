@@ -7,7 +7,7 @@
   "description": "sproxyd client",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint $(git ls-files '*.js')",
+    "lint": "eslint $(git ls-files '*.js' '*.mjs')",
     "prettier:check": "prettier --check .",
     "test": "mocha tests/unit"
   },
