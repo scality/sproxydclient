@@ -4,7 +4,7 @@ name: tests
 on:
   push:
     branches-ignore:
-    - 'development/**'
+      - 'development/**'
 
 jobs:
   test:
@@ -14,17 +14,17 @@ jobs:
       matrix:
         node-version: ['22', '24']
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
-    - name: install dependencies
-      run: yarn install --frozen-lockfile
-    - name: lint javascript
-      run: yarn --silent lint -- --max-warnings 0
-    - name: check formatting
-      run: yarn --silent prettier:check
-    - name: run tests
-      run: yarn test
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - name: install dependencies
+        run: yarn install --frozen-lockfile
+      - name: lint javascript
+        run: yarn --silent lint -- --max-warnings 0
+      - name: check formatting
+        run: yarn --silent prettier:check
+      - name: run tests
+        run: yarn test

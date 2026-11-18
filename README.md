@@ -6,8 +6,7 @@
 ## Contributing
 
 In order to contribute, please follow the
-[Contributing Guidelines](
-https://github.com/scality/Guidelines/blob/master/CONTRIBUTING.md).
+[Contributing Guidelines](https://github.com/scality/Guidelines/blob/master/CONTRIBUTING.md).
 
 ## Usage
 
@@ -60,6 +59,7 @@ Client.delete(key: string, (err: Error) => {});
 ## TODO
 
 The API is still in its infancy stages. We need to:
+
 - Detect said failures before sending our requests (Phi accrual detector)
 
 [badgepub]: https://circleci.com/gh/scality/sproxydclient.svg?style=svg
